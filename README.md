@@ -11,3 +11,9 @@ cPing concurrently checks if hosts are responding using ICMP echo or TCP SYN.
 # Usage
 
     cping host1 host2
+
+# Help
+
+See the available arguments to adjust the behavior of cPing.
+
+    cping -h
