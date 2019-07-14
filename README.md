@@ -1,6 +1,6 @@
 Pinger checks if hosts are responding using ICMP echo or TCP SYN.
 
-> Plenty of other solutions out there; this one is just a quick and short solution.
+> Plenty of other solutions out there; this one is just a quick and short one.
 
 ![alt text](https://github.com/hSaria/ClusterTerminal/raw/master/.github/example_1.png "Example output")
 
