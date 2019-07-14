@@ -1,4 +1,4 @@
 *.pyc
 build/
-pinger.egg-info/
+cping.egg-info/
 dist/

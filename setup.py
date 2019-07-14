@@ -6,7 +6,7 @@ with open('README.md', 'r') as f:
     long_description = f.read()
 
 setup(
-    name='pinger',
+    name='cping',
     author='hSaria',
     author_email='ping@heysaria.com',
     classifiers=[
@@ -21,7 +21,7 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     python_requires=REQUIRES_PYTHON,
-    scripts=['pinger'],
-    url='https://github.com/hSaria/Pinger',
+    scripts=['cping'],
+    url='https://github.com/hSaria/cPing',
     version='0.0.1',
 )

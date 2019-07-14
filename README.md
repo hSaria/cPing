@@ -1,13 +1,13 @@
-Pinger checks if hosts are responding using ICMP echo or TCP SYN.
+cPing concurrently checks if hosts are responding using ICMP echo or TCP SYN.
 
 > Plenty of other solutions out there; this is just a quick and short one.
 
-![alt text](https://github.com/hSaria/Pinger/raw/master/.github/example_1.png "Example output")
+![alt text](https://github.com/hSaria/cPing/raw/master/.github/example_1.png "Example output")
 
 # Installation
 
-    pip3 install pinger
+    pip3 install cping
 
 # Usage
 
-    pinger host1 host2
+    cping host1 host2

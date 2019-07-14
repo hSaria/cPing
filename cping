@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Pinger checks if hosts are responding using ICMP echo or TCP SYN.
+"""cPing concurrently checks if hosts are responding using ICMP echo or TCP SYN.
 
 Todo:
     * Fix ICMP echo spawning (new process per ping). Currently causse 1 session
