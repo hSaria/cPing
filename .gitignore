@@ -1,0 +1,4 @@
+*.pyc
+build/
+pinger.egg-info/
+dist/
