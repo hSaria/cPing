@@ -1,0 +1,190 @@
+#!/usr/bin/env python3
+"""Pinger checks if hosts are responding using ICMP echo or TCP SYN.
+
+Todo:
+    * Fix ICMP echo spawning (new process per ping). Currently causse 1 session
+        to be created per ping due to the different ICMP signature of a new
+        process."""
+
+# pylint: disable=broad-except  # Don't care about which exception; cleaning up
+
+import collections
+import random
+import re
+import socket
+import statistics
+import subprocess
+import sys
+import threading
+import time
+
+HOST_LEN_MAX = 40  # Max host length to be honored by padding
+SPAWN_WAIT_RANGE = 100  # Range of milliseconds between thread spawn rate
+WAIT_MIN = 0.1  # Lower bound on test interval
+
+
+class Host:
+    """Represents a single host and its result"""
+    def __init__(self, host, port, interval, results_length):
+        self.host = host
+        self.port = port
+        self.interval = interval
+        self.results = collections.deque(maxlen=max(1, results_length))
+        self.status = None
+
+    def check_icmp(self):
+        """Perform ICMP test and add the result to the results buffer"""
+        command = ['ping', self.host, '-t1', '-c1']
+        try:
+            result = subprocess.run(command,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE,
+                                    timeout=self.interval)
+
+            if 'ping: cannot resolve' in result.stderr.decode():
+                raise Exception('Host resolution failed')
+
+            regex = 'bytes from.+time=([.0-9]+) ms'
+            match = re.search(regex, result.stdout.decode())
+
+            self.results.append(-1 if match is None else float(match.group(1)))
+        except subprocess.TimeoutExpired:
+            self.results.append(-1)
+
+    def check_tcp(self):
+        """Perform TCP test and add the result to the results buffer"""
+        try:
+            sock_addr = socket.getaddrinfo(self.host, self.port, 0, 0,
+                                           socket.IPPROTO_TCP)
+            sock = socket.socket(sock_addr[0][0], sock_addr[0][1])
+            sock.settimeout(self.interval)
+
+            time_start = time.time()
+            sock.connect(sock_addr[0][4])
+            self.results.append((time.time() - time_start) * 1000)
+        except socket.timeout:
+            self.results.append(-1)
+        finally:
+            if 'sock' in locals():
+                sock.close()
+
+    def get_status(self, host_padding=30, stats_padding=8):
+        """Return a string that represents the status of the host"""
+        status = (self.host).ljust(host_padding + 3)
+
+        if self.status:  # Status already set (maybe an error)
+            return status + self.status
+
+        # Remove downed pings
+        results = list(filter(lambda x: x != -1, self.results))
+
+        if self.results.maxlen > 1:  # Enough results for stats and history
+            # Stats; successful pings only
+            if results:
+                status += '{:.3f}'.format(min(results)).ljust(stats_padding)
+
+                if len(results) > 1:
+                    for stat in statistics.mean, max, statistics.stdev:
+                        status += '{:.3f}'.format(
+                            stat(results)).ljust(stats_padding)
+                else:
+                    status += '  -'.ljust(stats_padding) * 3
+            else:
+                status += '  -'.ljust(stats_padding) * 4
+
+            # History; includes failed pings
+            for result in self.results:
+                if result == -1:
+                    status += color('.', False)
+                else:
+                    status += color('!')
+        else:
+            status += '{:.3f}'.format(results[0]) if results else '-'
+
+        return status
+
+    def test(self, shutdown):
+        """Start the continous ping tests"""
+        while not shutdown.is_set():
+            try:
+                if self.port == -1:
+                    self.check_icmp()
+                else:
+                    self.check_tcp()
+            except socket.gaierror:
+                self.status = 'Host resolution failed'
+                break
+            except Exception as exception:
+                self.status = str(exception)
+                break
+            time.sleep(self.interval)
+
+
+def args_init():
+    """Initialzes arguments and returns the output of `parse_args`"""
+    import argparse
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('host',
+                        type=str,
+                        nargs='+',
+                        help='one or more hosts to ping')
+    parser.add_argument('-i',
+                        metavar='sec',
+                        type=float,
+                        help='ping interval (default: %(default)s)',
+                        default=1)
+    parser.add_argument('-l',
+                        metavar='len',
+                        type=int,
+                        help='results history length (default: %(default)s)',
+                        default=25)
+    parser.add_argument('-p',
+                        metavar='port',
+                        type=int,
+                        help='test using TCP SYN (default: ICMP echo)',
+                        default=-1)
+
+    args = parser.parse_args()
+    args.i = max(WAIT_MIN, args.i)
+
+    return args
+
+
+def color(string, success=True):
+    """Colors the string green if its a success, or red if its not."""
+    return '\033[' + ('32m' if success else '31m') + string + '\033[0m'
+
+
+def main():
+    """Main entry point"""
+    args = args_init()
+
+    if args.p != -1 and not 0 < args.p < 65536:
+        return 'Port outside of range 1-65535'
+
+    host_padding = min(HOST_LEN_MAX, max([len(x) for x in args.host]))
+    hosts = [Host(x, args.p, args.i, args.l) for x in args.host]
+    shutdown = threading.Event()
+
+    for host in hosts:
+        threading.Thread(target=host.test, args=(shutdown, )).start()
+        time.sleep(random.randint(1, SPAWN_WAIT_RANGE) / 1000)
+
+    try:
+        while True:
+            for host in hosts:
+                print(host.get_status(host_padding))
+
+            time.sleep(args.i)
+
+            print('\033[{}A'.format(len(hosts)), end='')  # Move to beginning
+            print('\033[J', end='')  # Clear 'til end of screen
+    except KeyboardInterrupt:  # Break out of the application
+        shutdown.set()
+        print()
+
+
+if __name__ == '__main__':
+    sys.exit(main())
