@@ -17,7 +17,7 @@ import sys
 import threading
 import time
 
-HOST_LEN_MAX = 40  # Max host length to be honored by padding
+HOST_LEN_MAX = 64  # Max host length to be honored by padding
 WAIT_MIN = 0.1  # Lower bound on test interval
 
 
@@ -72,9 +72,9 @@ class Host:
             if 'sock' in locals():
                 sock.close()
 
-    def get_status(self, host_padding=30, stats_padding=8):
+    def get_status(self, host_padding=64, stats_padding=8):
         """Return a string that represents the status of the host"""
-        status = (self.host).ljust(host_padding + 3)
+        status = (self.host).ljust(host_padding) + '   '
 
         if self.status:  # Status already set (maybe an error)
             return status + self.status
@@ -110,6 +110,7 @@ class Host:
     def test(self, delay, shutdown):
         """Start the continous ping tests"""
         time.sleep(self.hid * delay)
+
         while not shutdown.is_set():
             try:
                 if self.port == -1:
