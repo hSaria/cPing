@@ -9,7 +9,6 @@ Todo:
 # pylint: disable=broad-except  # Don't care about which exception; cleaning up
 
 import collections
-import random
 import re
 import socket
 import statistics
@@ -19,18 +18,23 @@ import threading
 import time
 
 HOST_LEN_MAX = 40  # Max host length to be honored by padding
-SPAWN_WAIT_RANGE = 100  # Range of milliseconds between thread spawn rate
 WAIT_MIN = 0.1  # Lower bound on test interval
 
 
 class Host:
     """Represents a single host and its result"""
+
+    ID = 0
+
     def __init__(self, host, port, interval, results_length):
+        self.hid = Host.ID
         self.host = host
         self.port = port
         self.interval = interval
         self.results = collections.deque(maxlen=max(1, results_length))
         self.status = None
+
+        Host.ID += 1
 
     def check_icmp(self):
         """Perform ICMP test and add the result to the results buffer"""
@@ -103,8 +107,9 @@ class Host:
 
         return status
 
-    def test(self, shutdown):
+    def test(self, delay, shutdown):
         """Start the continous ping tests"""
+        time.sleep(self.hid * delay)
         while not shutdown.is_set():
             try:
                 if self.port == -1:
@@ -164,13 +169,13 @@ def main():
     if args.p != -1 and not 0 < args.p < 65536:
         return 'Port outside of range 1-65535'
 
+    delay = args.i / len(args.host)
     host_padding = min(HOST_LEN_MAX, max([len(x) for x in args.host]))
     hosts = [Host(x, args.p, args.i, args.l) for x in args.host]
     shutdown = threading.Event()
 
     for host in hosts:
-        threading.Thread(target=host.test, args=(shutdown, )).start()
-        time.sleep(random.randint(1, SPAWN_WAIT_RANGE) / 1000)
+        threading.Thread(target=host.test, args=(delay, shutdown)).start()
 
     try:
         while True:
