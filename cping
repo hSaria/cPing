@@ -9,7 +9,9 @@ Todo:
 # pylint: disable=broad-except  # Don't care about which exception; cleaning up
 
 import collections
+import queue
 import re
+import signal
 import socket
 import statistics
 import subprocess
@@ -36,24 +38,42 @@ class Host:
 
         Host.ID += 1
 
-    def check_icmp(self):
-        """Perform ICMP test and add the result to the results buffer"""
-        command = ['ping', self.host, '-t1', '-c1']
-        try:
-            ping = subprocess.run(command,
-                                  stdout=subprocess.PIPE,
-                                  stderr=subprocess.PIPE,
-                                  timeout=self.interval)
+    def check_icmp(self, shutdown):
+        """Run ping and add the reply times to the results buffer"""
+        def read_fd(stdout, output):
+            for line in iter(stdout.readline, b''):
+                output.put(line)
+            stdout.close()
 
-            if 'ping: cannot resolve' in ping.stderr.decode():
-                raise Exception('Host resolution failed')
+        command = ['ping', self.host, '-i{}'.format(self.interval)]
+        output = queue.Queue()
 
-            regex = 'bytes from.+time=([.0-9]+) ms'
-            match = re.search(regex, ping.stdout.decode())
+        ping = subprocess.Popen(command,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT)
+        threading.Thread(target=read_fd, args=(ping.stdout, output)).start()
 
-            self.results.append(-1 if match is None else float(match.group(1)))
-        except subprocess.TimeoutExpired:
-            self.results.append(-1)
+        while not shutdown.is_set():
+            time.sleep(self.interval)  # Wait for reply first
+            reply = False
+
+            while not output.empty():
+                line = output.get(False).decode()
+
+                if 'ping: cannot resolve' in line:
+                    raise Exception('Host resolution failed')
+
+                match = re.search('bytes from.+time=([.0-9]+) ms', line)
+
+                # Reply within interval range (i.e. not retrospective)
+                if match and float(match.group(1)) < self.interval * 1000:
+                    reply = True
+                    self.results.append(float(match.group(1)))
+
+            if not reply:  # Didn't find a reply within the interval
+                self.results.append(-1)
+
+        ping.send_signal(signal.SIGINT)
 
     def check_tcp(self):
         """Perform TCP test and add the result to the results buffer"""
@@ -109,21 +129,19 @@ class Host:
 
     def test(self, delay, shutdown):
         """Start the continous ping tests"""
-        time.sleep(self.hid * delay)
+        time.sleep(self.hid * delay)  # Spread tests across interval
 
-        while not shutdown.is_set():
-            try:
-                if self.port == -1:
-                    self.check_icmp()
-                else:
+        try:
+            if self.port == -1:  # ICMP
+                self.check_icmp(shutdown)
+            else:  # TCP
+                while not shutdown.is_set():
                     self.check_tcp()
-            except socket.gaierror:
-                self.status = 'Host resolution failed'
-                break
-            except Exception as exception:
-                self.status = str(exception)
-                break
-            time.sleep(self.interval)
+                    time.sleep(self.interval)
+        except socket.gaierror:
+            self.status = 'Host resolution failed'
+        except Exception as exception:
+            self.status = str(exception)
 
 
 def args_init():
