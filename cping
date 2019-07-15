@@ -18,7 +18,7 @@ import threading
 import time
 
 HOST_LEN_MAX = 64  # Max host length to be honored by padding
-WAIT_MIN = 0.1  # Lower bound on test interval
+INTERVAL_MIN = 0.1  # Lower bound on test interval
 
 
 class Host:
@@ -153,7 +153,7 @@ def args_init():
                         default=-1)
 
     args = parser.parse_args()
-    args.i = max(WAIT_MIN, args.i)
+    args.i = max(INTERVAL_MIN, args.i)
 
     return args
 
