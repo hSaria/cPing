@@ -40,16 +40,16 @@ class Host:
         """Perform ICMP test and add the result to the results buffer"""
         command = ['ping', self.host, '-t1', '-c1']
         try:
-            result = subprocess.run(command,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE,
-                                    timeout=self.interval)
+            ping = subprocess.run(command,
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE,
+                                  timeout=self.interval)
 
-            if 'ping: cannot resolve' in result.stderr.decode():
+            if 'ping: cannot resolve' in ping.stderr.decode():
                 raise Exception('Host resolution failed')
 
             regex = 'bytes from.+time=([.0-9]+) ms'
-            match = re.search(regex, result.stdout.decode())
+            match = re.search(regex, ping.stdout.decode())
 
             self.results.append(-1 if match is None else float(match.group(1)))
         except subprocess.TimeoutExpired:
