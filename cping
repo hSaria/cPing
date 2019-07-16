@@ -111,10 +111,15 @@ class Host:
                     for stat in statistics.mean, max, statistics.stdev:
                         status += '{:.3f}'.format(
                             stat(results)).ljust(stats_padding)
+
+                    hits = [x for x in self.results if x != -1]
+                    success_rate = int(len(hits) * 100 / len(self.results))
+                    success_rate = '{}%'.format(success_rate).rjust(4)
+                    status += success_rate.ljust(stats_padding)
                 else:
-                    status += '  -'.ljust(stats_padding) * 3
+                    status += '  -'.ljust(stats_padding) * 4
             else:
-                status += '  -'.ljust(stats_padding) * 4
+                status += '  -'.ljust(stats_padding) * 5
 
             # History; includes failed pings
             for result in self.results:
