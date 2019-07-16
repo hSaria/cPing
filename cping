@@ -94,7 +94,7 @@ class Host:
 
     def get_status(self, host_padding=64, stats_padding=8):
         """Return a string that represents the status of the host"""
-        status = (self.host).ljust(host_padding) + '   '
+        status = (self.host).ljust(host_padding) + '    '
 
         if self.status:  # Status already set (maybe an error)
             return status + self.status
