@@ -33,10 +33,17 @@ class Host:
         self.host = host
         self.port = port
         self.interval = interval
+        self.lock = threading.Lock()
         self.results = collections.deque(maxlen=max(1, results_length))
         self.status = None
 
         Host.ID += 1
+
+    def add_result(self, result):
+        """Add a result to the deque making sure to lock it before hand."""
+        self.lock.acquire()
+        self.results.append(result)
+        self.lock.release()
 
     def check_icmp(self, shutdown):
         """Run ping and add the reply times to the results buffer"""
@@ -68,10 +75,10 @@ class Host:
                 # Reply within interval range (i.e. not retrospective)
                 if match and float(match.group(1)) < self.interval * 1000:
                     reply = True
-                    self.results.append(float(match.group(1)))
+                    self.add_result(float(match.group(1)))
 
             if not reply:  # Didn't find a reply within the interval
-                self.results.append(-1)
+                self.add_result(-1)
 
         ping.send_signal(signal.SIGINT)
 
@@ -85,9 +92,9 @@ class Host:
 
             time_start = time.time()
             sock.connect(sock_addr[0][4])
-            self.results.append((time.time() - time_start) * 1000)
+            self.add_result((time.time() - time_start) * 1000)
         except socket.timeout:
-            self.results.append(-1)
+            self.add_result(-1)
         finally:
             if 'sock' in locals():
                 sock.close()
@@ -98,6 +105,9 @@ class Host:
 
         if self.status:  # Status already set (maybe an error)
             return status + self.status
+
+        # Prevent mutations to deque during iteration
+        self.lock.acquire()
 
         # Remove downed pings
         results = list(filter(lambda x: x != -1, self.results))
@@ -129,6 +139,8 @@ class Host:
                     status += color('!')
         else:
             status += '{:.3f}'.format(results[0]) if results else '-'
+
+        self.lock.release()
 
         return status
 
