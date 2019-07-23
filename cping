@@ -55,8 +55,10 @@ class Host:
                                 stderr=subprocess.STDOUT)
         threading.Thread(target=read_fd, args=(ping.stdout, output)).start()
 
-        while not shutdown.is_set():
-            time.sleep(self.interval)  # Wait for reply first
+        while True:
+            if shutdown.wait(self.interval):  # Shutdown signaled
+                break
+
             reply = False
 
             while not output.empty():
@@ -79,7 +81,12 @@ class Host:
 
     def check_tcp(self, shutdown):
         """Run TCP SYN tests and add the reply times to the results buffer."""
-        while not shutdown.is_set():
+        timeout = self.interval
+
+        while True:
+            if shutdown.wait(timeout):  # Shutdown signaled
+                break
+
             try:
                 sock_addr = socket.getaddrinfo(self.host, self.port, 0, 0,
                                                socket.IPPROTO_TCP)
@@ -89,13 +96,13 @@ class Host:
                 time_start = time.time()
                 sock.connect(sock_addr[0][4])
                 self.add_result((time.time() - time_start) * 1000)
+                timeout = self.interval  # Suceeded; wait on next iteration
             except socket.timeout:
                 self.add_result(-1)
+                timeout = 0  # Expired; no need to wait on next iteration
             finally:
                 if 'sock' in locals():
                     sock.close()
-
-            time.sleep(self.interval)
 
     def get_status(self, host_padding=64, stats_padding=8):
         """Return a string that represents the status of the host."""
