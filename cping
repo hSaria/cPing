@@ -19,7 +19,7 @@ INTERVAL_MIN = 0.1  # Lower bound on test interval
 
 
 class Host:
-    """Represents a single host and its result"""
+    """Represents a host and its test results."""
 
     ID = 0
 
@@ -41,7 +41,7 @@ class Host:
         self.lock.release()
 
     def check_icmp(self, shutdown):
-        """Run ping and add the reply times to the results buffer"""
+        """Run ping and add the reply times to the results buffer."""
         def read_fd(stdout, output):
             for line in iter(stdout.readline, b''):
                 output.put(line)
@@ -78,7 +78,7 @@ class Host:
         ping.send_signal(signal.SIGINT)
 
     def check_tcp(self, shutdown):
-        """Run TCP syn and add the reply times to the results buffer"""
+        """Run TCP SYN tests and add the reply times to the results buffer."""
         while not shutdown.is_set():
             try:
                 sock_addr = socket.getaddrinfo(self.host, self.port, 0, 0,
@@ -98,7 +98,7 @@ class Host:
             time.sleep(self.interval)
 
     def get_status(self, host_padding=64, stats_padding=8):
-        """Return a string that represents the status of the host"""
+        """Return a string that represents the status of the host."""
         status = (self.host).ljust(host_padding) + '    '
 
         if self.status:  # Status already set (maybe an error)
@@ -143,7 +143,7 @@ class Host:
         return status
 
     def test(self, delay, shutdown):
-        """Start the continous ping tests"""
+        """Start the continous tests (blocking operation)."""
         time.sleep(self.hid * delay)  # Spread tests across interval
 
         try:
@@ -158,7 +158,7 @@ class Host:
 
 
 def args_init():
-    """Initialzes arguments and returns the output of `parse_args`"""
+    """Initialzes arguments and returns the output of `parse_args`."""
     import argparse
 
     parser = argparse.ArgumentParser()
@@ -195,7 +195,7 @@ def color(string, success=True):
 
 
 def main():
-    """Main entry point"""
+    """Main entry point."""
     args = args_init()
 
     if args.p != -1 and not 0 < args.p < 65536:
