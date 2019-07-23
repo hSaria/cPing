@@ -82,22 +82,25 @@ class Host:
 
         ping.send_signal(signal.SIGINT)
 
-    def check_tcp(self):
-        """Perform TCP test and add the result to the results buffer"""
-        try:
-            sock_addr = socket.getaddrinfo(self.host, self.port, 0, 0,
-                                           socket.IPPROTO_TCP)
-            sock = socket.socket(sock_addr[0][0], sock_addr[0][1])
-            sock.settimeout(self.interval)
+    def check_tcp(self, shutdown):
+        """Run TCP syn and add the reply times to the results buffer"""
+        while not shutdown.is_set():
+            try:
+                sock_addr = socket.getaddrinfo(self.host, self.port, 0, 0,
+                                               socket.IPPROTO_TCP)
+                sock = socket.socket(sock_addr[0][0], sock_addr[0][1])
+                sock.settimeout(self.interval)
 
-            time_start = time.time()
-            sock.connect(sock_addr[0][4])
-            self.add_result((time.time() - time_start) * 1000)
-        except socket.timeout:
-            self.add_result(-1)
-        finally:
-            if 'sock' in locals():
-                sock.close()
+                time_start = time.time()
+                sock.connect(sock_addr[0][4])
+                self.add_result((time.time() - time_start) * 1000)
+            except socket.timeout:
+                self.add_result(-1)
+            finally:
+                if 'sock' in locals():
+                    sock.close()
+
+            time.sleep(self.interval)
 
     def get_status(self, host_padding=64, stats_padding=8):
         """Return a string that represents the status of the host"""
@@ -152,9 +155,7 @@ class Host:
             if self.port == -1:  # ICMP
                 self.check_icmp(shutdown)
             else:  # TCP
-                while not shutdown.is_set():
-                    self.check_tcp()
-                    time.sleep(self.interval)
+                self.check_tcp(shutdown)
         except socket.gaierror:
             self.status = 'Host resolution failed'
         except Exception as exception:
