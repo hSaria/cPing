@@ -56,9 +56,6 @@ class Host:
         threading.Thread(target=read_fd, args=(ping.stdout, output)).start()
 
         while True:
-            if shutdown.wait(self.interval):  # Shutdown signaled
-                break
-
             reply = False
 
             while not output.empty():
@@ -77,6 +74,9 @@ class Host:
             if not reply:  # Didn't find a reply within the interval
                 self.add_result(-1)
 
+            if shutdown.wait(self.interval):  # Sleep until signaled or exipred
+                break  # Shutdown signaled
+
         ping.send_signal(signal.SIGINT)
 
     def check_tcp(self, shutdown):
@@ -84,9 +84,6 @@ class Host:
         timeout = self.interval
 
         while True:
-            if shutdown.wait(timeout):  # Shutdown signaled
-                break
-
             try:
                 sock_addr = socket.getaddrinfo(self.host, self.port, 0, 0,
                                                socket.IPPROTO_TCP)
@@ -103,6 +100,9 @@ class Host:
             finally:
                 if 'sock' in locals():
                     sock.close()
+
+            if shutdown.wait(timeout):  # Sleep until signaled or exipred
+                break  # Shutdown signaled
 
     def get_status(self, host_padding=64, stats_padding=8):
         """Return a string that represents the status of the host."""
