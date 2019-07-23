@@ -149,9 +149,10 @@ class Host:
 
         return status
 
-    def test(self, delay, shutdown):
+    def test(self, shutdown):
         """Start the continous tests (blocking operation)."""
-        time.sleep(self.hid * delay)  # Spread tests across interval
+        # Spread host test init across interval
+        time.sleep(self.interval / Host.ID * self.hid)
 
         try:
             if self.port == -1:  # ICMP
@@ -208,13 +209,12 @@ def main():
     if args.p != -1 and not 0 < args.p < 65536:
         return 'Port outside of range 1-65535'
 
-    delay = args.i / len(args.host)
     host_padding = min(HOST_LEN_MAX, max([len(x) for x in args.host]))
     hosts = [Host(x, args.p, args.i, args.l) for x in args.host]
     shutdown = threading.Event()
 
     for host in hosts:
-        threading.Thread(target=host.test, args=(delay, shutdown)).start()
+        threading.Thread(target=host.test, args=(shutdown, )).start()
 
     try:
         while True:
