@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
-"""cPing concurrently checks if hosts are responding using ICMP echo or TCP SYN.
-
-Todo:
-    * Fix ICMP echo spawning (new process per ping). Currently causse 1 session
-        to be created per ping due to the different ICMP signature of a new
-        process."""
+"""cPing concurrently checks if hosts are responding using ICMP echo or TCP SYN."""
 
 # pylint: disable=broad-except  # Don't care about which exception; cleaning up
 
