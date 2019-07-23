@@ -73,6 +73,7 @@ class Host:
                 if match and float(match.group(1)) < self.interval * 1000:
                     reply = True
                     self.add_result(float(match.group(1)))
+                    break  # Don't process more than one result per loop
 
             if not reply:  # Didn't find a reply within the interval
                 self.add_result(-1)
