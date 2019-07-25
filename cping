@@ -213,22 +213,29 @@ def main():
     host_padding = min(HOST_LEN_MAX, max([len(x) for x in args.host]))
     hosts = [Host(x, args.p, args.i, args.l) for x in args.host]
     shutdown = threading.Event()
+    threads = []
 
     for host in hosts:
-        threading.Thread(target=host.test, args=(shutdown, )).start()
+        host_thread = threading.Thread(target=host.test, args=(shutdown, ))
+        host_thread.start()
+        threads.append(host_thread)
 
     try:
         while True:
             for host in hosts:
                 print(host.get_status(host_padding))
 
+            if not [x for x in threads if x.is_alive()]:  # No one is alive
+                break
+
             time.sleep(args.i)
 
             print('\033[{}A'.format(len(hosts)), end='')  # Move to beginning
             print('\033[J', end='')  # Clear 'til end of screen
     except KeyboardInterrupt:  # Break out of the application
-        shutdown.set()
-        print()
+        print()  # Add new line to prevent output at prompt
+    finally:
+        shutdown.set()  # Signal host threads to quit
 
 
 if __name__ == '__main__':
