@@ -64,8 +64,8 @@ class Host:
             while not output.empty():
                 line = output.get(False).decode()
 
-                if 'ping: cannot resolve' in line:
-                    raise Exception('Host resolution failed')
+                if line.startswith('ping:'):
+                    raise Exception(line[6:].strip())
 
                 match = re.search('bytes from.+time=([.0-9]+) ms', line)
 
