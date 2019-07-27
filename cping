@@ -56,7 +56,7 @@ class Host:
         threading.Thread(target=read_fd, args=(ping.stdout, output)).start()
 
         while True:
-            if shutdown.wait(self.interval):  # Sleep until signaled or exipred
+            if shutdown.wait(self.interval):  # Sleep until signaled or expired
                 break  # Shutdown signaled
 
             reply = False
