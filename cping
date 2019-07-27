@@ -75,6 +75,10 @@ class Host:
             if not reply:  # Didn't find a reply within the interval
                 self.add_result(-1)
 
+            if ping.poll() is not None:  # Process is not running
+                self.status = 'Ping process died'
+                break
+
         ping.send_signal(signal.SIGINT)
 
     def check_tcp(self, shutdown):
