@@ -196,6 +196,9 @@ def args_init():
     args = parser.parse_args()
     args.i = max(INTERVAL_MIN, args.i)
 
+    if args.p != -1 and not 0 < args.p < 65536:
+        parser.error('Port outside of range 1-65535')
+
     return args
 
 
@@ -207,9 +210,6 @@ def color(string, success=True):
 def main():
     """Main entry point."""
     args = args_init()
-
-    if args.p != -1 and not 0 < args.p < 65536:
-        return 'Port outside of range 1-65535'
 
     host_padding = min(HOST_LEN_MAX, max([len(x) for x in args.host]))
     hosts = [Host(x, args.p, args.i, args.l) for x in args.host]
