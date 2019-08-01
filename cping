@@ -6,6 +6,7 @@
 import collections
 import queue
 import re
+import shutil
 import signal
 import socket
 import statistics
@@ -16,6 +17,7 @@ import time
 
 HOST_LEN_MAX = 64  # Max host length to be honored by padding
 INTERVAL_MIN = 0.1  # Lower bound on test interval
+RESULTS_DEQUE_MIN = 5  # Lower bound on the number of results for a host
 
 
 class Host:
@@ -23,13 +25,13 @@ class Host:
 
     ID = 0
 
-    def __init__(self, host, port, interval, results_length):
+    def __init__(self, host, port, interval):
         self.hid = Host.ID
         self.host = host
         self.port = port
         self.interval = interval
         self.lock = threading.Lock()
-        self.results = collections.deque(maxlen=max(1, results_length))
+        self.results = collections.deque(maxlen=RESULTS_DEQUE_MIN)
         self.status = None
 
         Host.ID += 1
@@ -38,6 +40,25 @@ class Host:
         """Add a result to the deque making sure to lock it before hand."""
         self.lock.acquire()
         self.results.append(result)
+        self.lock.release()
+
+    def change_deque_size(self, new_size):
+        """Change the deque size to be `new_size`."""
+        new_size = max(new_size, RESULTS_DEQUE_MIN)
+
+        if self.results.maxlen == new_size:  # Already at new size
+            return
+
+        new_results = collections.deque(maxlen=new_size)
+        self.lock.acquire()
+
+        for _ in range(new_size):
+            try:
+                new_results.appendleft(self.results.pop())
+            except IndexError:
+                break
+
+        self.results = new_results
         self.lock.release()
 
     def check_icmp(self, shutdown):
@@ -52,7 +73,8 @@ class Host:
 
         ping = subprocess.Popen(command,
                                 stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT)
+                                stderr=subprocess.STDOUT,
+                                start_new_session=True)
         threading.Thread(target=read_fd, args=(ping.stdout, output)).start()
 
         while not shutdown.wait(self.interval):  # Run until shutdown signaled
@@ -106,12 +128,16 @@ class Host:
             if shutdown.wait(timeout):  # Sleep until signaled or exipred
                 break  # Shutdown signaled
 
-    def get_status(self, host_padding=64, stats_padding=8):
+    def get_status(self, host_padding=64, output_width=None, stats_padding=8):
         """Return a string that represents the status of the host."""
         status = (self.host).ljust(host_padding) + '    '
 
         if self.status:  # Status already set (maybe an error)
             return status + self.status
+
+        if output_width:  # Update deque len
+            new_size = output_width - len(status) - stats_padding * 5
+            self.change_deque_size(new_size)
 
         # Prevent mutations to deque during iteration
         self.lock.acquire()
@@ -119,33 +145,30 @@ class Host:
         # Remove downed pings
         results = list(filter(lambda x: x != -1, self.results))
 
-        if self.results.maxlen > 1:  # Enough results for stats and history
-            # Stats; successful pings only
-            if results:
-                status += '{:.3f}'.format(min(results)).ljust(stats_padding)
+        # Stats; successful pings only
+        if results:
+            status += '{:.3f}'.format(min(results)).ljust(stats_padding)
 
-                if len(results) > 1:
-                    for stat in statistics.mean, max, statistics.stdev:
-                        status += '{:.3f}'.format(
-                            stat(results)).ljust(stats_padding)
+            if len(results) > 1:
+                for stat in statistics.mean, max, statistics.stdev:
+                    status += '{:.3f}'.format(
+                        stat(results)).ljust(stats_padding)
 
-                    hits = [x for x in self.results if x != -1]
-                    success_rate = int(len(hits) * 100 / len(self.results))
-                    success_rate = '{}%'.format(success_rate).rjust(4)
-                    status += success_rate.ljust(stats_padding)
-                else:
-                    status += '  -'.ljust(stats_padding) * 4
+                hits = [x for x in self.results if x != -1]
+                success_rate = int(len(hits) * 100 / len(self.results))
+                success_rate = '{}%'.format(success_rate).rjust(4)
+                status += success_rate.ljust(stats_padding)
             else:
-                status += '  -'.ljust(stats_padding) * 5
-
-            # History; includes failed pings
-            for result in self.results:
-                if result == -1:
-                    status += color('.', False)
-                else:
-                    status += color('!')
+                status += '  -'.ljust(stats_padding) * 4
         else:
-            status += '{:.3f}'.format(results[0]) if results else '-'
+            status += '  -'.ljust(stats_padding) * 5
+
+        # History; includes failed pings
+        for result in self.results:
+            if result == -1:
+                status += color('.', False)
+            else:
+                status += color('!')
 
         self.lock.release()
 
@@ -182,11 +205,6 @@ def args_init():
                         type=float,
                         help='ping interval (default: %(default)s)',
                         default=1)
-    parser.add_argument('-l',
-                        metavar='len',
-                        type=int,
-                        help='results history length (default: %(default)s)',
-                        default=25)
     parser.add_argument('-p',
                         metavar='port',
                         type=int,
@@ -207,12 +225,19 @@ def color(string, success=True):
     return '\033[' + ('32m' if success else '31m') + string + '\033[0m'
 
 
+def print_summary(hosts, host_padding):
+    """Print a summary of the hosts' results."""
+    term_size = shutil.get_terminal_size((64, 20))
+
+    for _, host in zip(range(term_size.lines - 1), hosts):
+        print(host.get_status(host_padding, term_size.columns))
+
+
 def main():
     """Main entry point."""
     args = args_init()
-
     host_padding = min(HOST_LEN_MAX, max([len(x) for x in args.host]))
-    hosts = [Host(x, args.p, args.i, args.l) for x in args.host]
+    hosts = [Host(x, args.p, args.i) for x in args.host]
     shutdown = threading.Event()
     threads = []
 
@@ -222,21 +247,19 @@ def main():
         threads.append(host_thread)
 
     try:
-        while True:
-            for host in hosts:
-                print(host.get_status(host_padding))
+        try:  # Need to run clean up code before raising exception
+            print('\033[?1049h', end='')  # Enable alternate screen buffer
 
-            if not [x for x in threads if x.is_alive()]:  # No one is alive
-                break
-
-            time.sleep(args.i)
-
-            print('\033[{}A'.format(len(hosts)), end='')  # Move to beginning
-            print('\033[J', end='')  # Clear 'til end of screen
-    except KeyboardInterrupt:  # Break out of the application
-        print()  # Add new line to prevent output at prompt
-    finally:
-        shutdown.set()  # Signal host threads to quit
+            while [x for x in threads if x.is_alive()]:  # Someone is alive
+                print_summary(hosts, host_padding)
+                time.sleep(args.i)
+                print('\033[H\033[J', end='')  # Move to 1;1 and clear to end
+        finally:
+            shutdown.set()  # Signal host threads to quit
+            print('\033[?1049l', end='')  # Disable alternate screen buffer
+            print_summary(hosts, host_padding)  # Print the last summary
+    except KeyboardInterrupt:
+        pass  # Break out of the application
 
 
 if __name__ == '__main__':
