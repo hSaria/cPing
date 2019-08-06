@@ -228,9 +228,12 @@ def color(string, success=True):
 def print_summary(hosts, host_padding):
     """Print a summary of the hosts' results."""
     term_size = shutil.get_terminal_size((64, 20))
+    output = []
 
     for _, host in zip(range(term_size.lines - 1), hosts):
-        print(host.get_status(host_padding, term_size.columns))
+        output.append(host.get_status(host_padding, term_size.columns))
+
+    print('\033[K\n'.join(output) + '\033[J')  # Clear any ghosting
 
 
 def main():
@@ -253,7 +256,7 @@ def main():
             while [x for x in threads if x.is_alive()]:  # Someone is alive
                 print_summary(hosts, host_padding)
                 time.sleep(args.i)
-                print('\033[H\033[J', end='')  # Move to 1;1 and clear to end
+                print('\033[H', end='')  # Move to 1;1
         finally:
             shutdown.set()  # Signal host threads to quit
             print('\033[?1049l', end='')  # Disable alternate screen buffer
