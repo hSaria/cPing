@@ -15,7 +15,6 @@ import sys
 import threading
 import time
 
-HOST_LEN_MAX = 64  # Max host length to be honored by padding
 INTERVAL_MIN = 0.1  # Lower bound on test interval
 RESULTS_DEQUE_MIN = 5  # Lower bound on the number of results for a host
 
@@ -239,7 +238,7 @@ def print_summary(hosts, host_padding):
 def main():
     """Main entry point."""
     args = args_init()
-    host_padding = min(HOST_LEN_MAX, max([len(x) for x in args.host]))
+    host_padding = max([len(x) for x in args.host])
     hosts = [Host(x, args.p, args.i) for x in args.host]
     shutdown = threading.Event()
     threads = []
