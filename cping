@@ -224,8 +224,9 @@ def color(string, success=True):
     return '\033[' + ('32m' if success else '31m') + string + '\033[0m'
 
 
-def print_summary(hosts, host_padding):
+def print_summary(hosts):
     """Print a summary of the hosts' results."""
+    host_padding = max([len(x.host) for x in hosts])
     term_size = shutil.get_terminal_size((64, 20))
     output = []
 
@@ -238,7 +239,6 @@ def print_summary(hosts, host_padding):
 def main():
     """Main entry point."""
     args = args_init()
-    host_padding = max([len(x) for x in args.host])
     hosts = [Host(x, args.p, args.i) for x in args.host]
     shutdown = threading.Event()
     threads = []
@@ -253,13 +253,13 @@ def main():
             print('\033[?1049h', end='')  # Enable alternate screen buffer
 
             while [x for x in threads if x.is_alive()]:  # Someone is alive
-                print_summary(hosts, host_padding)
+                print_summary(hosts)
                 time.sleep(args.i)
                 print('\033[H', end='')  # Move to 1;1
         finally:
             shutdown.set()  # Signal host threads to quit
             print('\033[?1049l', end='')  # Disable alternate screen buffer
-            print_summary(hosts, host_padding)  # Print the last summary
+            print_summary(hosts)  # Print the last summary
     except KeyboardInterrupt:
         pass  # Break out of the application
 
