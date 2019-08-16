@@ -21,19 +21,13 @@ RESULTS_DEQUE_MIN = 5  # Lower bound on the number of results for a host
 
 class Host:
     """Represents a host and its test results."""
-
-    ID = 0
-
     def __init__(self, host, port, interval):
-        self.hid = Host.ID
         self.host = host
         self.port = port
         self.interval = interval
         self.lock = threading.Lock()
         self.results = collections.deque(maxlen=RESULTS_DEQUE_MIN)
         self.status = None
-
-        Host.ID += 1
 
     def add_result(self, result):
         """Add a result to the deque making sure to lock it before hand."""
@@ -173,10 +167,9 @@ class Host:
 
         return status
 
-    def test(self, shutdown):
+    def test(self, delay, shutdown):
         """Start the continous tests (blocking operation)."""
-        # Spread host test init across interval
-        time.sleep(self.interval / Host.ID * self.hid)
+        time.sleep(delay)
 
         try:
             if self.port == -1:  # ICMP
@@ -243,10 +236,12 @@ def main():
     shutdown = threading.Event()
     threads = []
 
-    for host in hosts:
-        host_thread = threading.Thread(target=host.test, args=(shutdown, ))
-        host_thread.start()
-        threads.append(host_thread)
+    for host, host_id in zip(hosts, range(len(hosts))):
+        # Spread test start up across one interval
+        delay = args.i / len(hosts) * host_id
+        thread = threading.Thread(target=host.test, args=(delay, shutdown))
+        thread.start()
+        threads.append(thread)
 
     try:
         try:  # Need to run clean up code before handling exception
