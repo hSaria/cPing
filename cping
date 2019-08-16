@@ -249,7 +249,7 @@ def main():
         threads.append(host_thread)
 
     try:
-        try:  # Need to run clean up code before raising exception
+        try:  # Need to run clean up code before handling exception
             print('\033[?1049h', end='')  # Enable alternate screen buffer
 
             while [x for x in threads if x.is_alive()]:  # Someone is alive
