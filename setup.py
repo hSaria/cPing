@@ -14,7 +14,7 @@ setup(
         'Intended Audience :: Telecommunications Industry',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3', 'Topic :: Internet',
-        'Topic :: System :: Networking :: Monitoring'
+        'Topic :: System :: Networking :: Monitoring', 'Topic :: Utilities'
     ],
     description='Concurrent multi-host ping (ICMP and TCP)',
     license='MIT',
