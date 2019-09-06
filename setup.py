@@ -2,7 +2,7 @@ from setuptools import setup
 
 REQUIRES_PYTHON = '>=3.6.0'
 
-with open('README.md', 'r') as f:
+with open('.github/README.md', 'r') as f:
     long_description = f.read()
 
 setup(
