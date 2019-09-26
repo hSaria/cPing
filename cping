@@ -3,6 +3,7 @@
 
 # pylint: disable=broad-except  # Don't care about which exception; cleaning up
 
+import argparse
 import collections
 import queue
 import re
@@ -184,8 +185,6 @@ class Host:
 
 def args_init():
     """Initialzes arguments and returns the output of `parse_args`."""
-    import argparse
-
     parser = argparse.ArgumentParser()
 
     parser.add_argument('host',
