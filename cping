@@ -215,18 +215,21 @@ def color(string, success=True):
     return '\033[' + ('32m' if success else '31m') + string + '\033[0m'
 
 
-def print_summary(hosts):
-    """Print a summary of the hosts' results."""
+def print_summary(hosts, full=False):
+    """Print a summary of the hosts' results. `full` ignores term lines limit."""
     host_padding = max([len(x.host) for x in hosts])
     term_size = shutil.get_terminal_size((64, 20))
     output = []
 
-    for _, host in zip(range(term_size.lines - 1), hosts):
+    for host in hosts:
         output.append(host.get_status(host_padding, term_size.columns))
+
+        if not full and len(output) >= term_size.lines - 1:  # Limit reached
+            break
 
     print('\033[K\n'.join(output) + '\033[J')  # Clear any ghosting
 
-    if len(hosts) > term_size.lines - 1:
+    if not full and len(hosts) > term_size.lines - 1:  # Add overflow
         overflow = len(hosts) - (term_size.lines - 1)
         print('+{} more'.format(overflow), end='', flush=True)
 
@@ -256,7 +259,7 @@ def main():
         finally:
             shutdown.set()  # Signal host threads to quit
             print('\033[?1049l', end='')  # Disable alternate screen buffer
-            print_summary(hosts)  # Print the last summary
+            print_summary(hosts, full=True)  # Print the last summary
     except KeyboardInterrupt:
         pass  # Break out of the application
 
