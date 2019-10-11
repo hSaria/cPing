@@ -80,7 +80,7 @@ class Host:
                 if line.startswith('ping:') and ping.poll() is not None:
                     raise Exception(line[6:].strip())
 
-                match = re.search('bytes from.+time=([.0-9]+) ms', line)
+                match = re.search('bytes from.+time=([.0-9]+) ms$', line)
 
                 # Reply within interval range (i.e. not retrospective)
                 if match and float(match.group(1)) < self.interval * 1000:
