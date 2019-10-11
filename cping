@@ -226,6 +226,10 @@ def print_summary(hosts):
 
     print('\033[K\n'.join(output) + '\033[J')  # Clear any ghosting
 
+    if len(hosts) > term_size.lines - 1:
+        overflow = len(hosts) - (term_size.lines - 1)
+        print('+{} more'.format(overflow), end='', flush=True)
+
 
 def main():
     """Main entry point."""
