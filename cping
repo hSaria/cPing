@@ -67,8 +67,7 @@ class Host:
 
         ping = subprocess.Popen(command,
                                 stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT,
-                                start_new_session=True)
+                                stderr=subprocess.STDOUT)
         threading.Thread(target=read_fd, args=(ping.stdout, output)).start()
 
         while not shutdown.wait(self.interval):  # Run until shutdown signaled
