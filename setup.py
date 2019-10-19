@@ -23,5 +23,5 @@ setup(
     python_requires=REQUIRES_PYTHON,
     scripts=['cping'],
     url='https://github.com/hSaria/cPing',
-    version='0.0.12',
+    version='0.0.13-dev',
 )
