@@ -159,13 +159,13 @@ class Host:
         # History; includes failed pings
         for result in self.results:
             if result == -1:
-                status += color('.', False)
+                status += '\x1b[32m.'
             else:
-                status += color('!')
+                status += '\x1b[32m!'
 
         self.lock.release()
 
-        return status
+        return status + '\x1b[39m'  # Reset color
 
     def test(self, delay, shutdown):
         """Start the continous tests (blocking operation)."""
@@ -210,26 +210,20 @@ def args_init():
     return args
 
 
-def color(string, success=True):
-    """Colors the string green if its a success, or red if its not."""
-    return '\033[' + ('32m' if success else '31m') + string + '\033[0m'
-
-
 def print_summary(hosts, full=False):
     """Print a summary of the hosts' results. `full` ignores term lines limit."""
     host_padding = max([len(x.host) for x in hosts])
     term_size = shutil.get_terminal_size((64, 20))
-    output = []
 
-    for host in hosts:
-        output.append(host.get_status(host_padding, term_size.columns))
+    for index, host in enumerate(hosts):
+        print(host.get_status(host_padding, term_size.columns) + '\033[K')
 
-        if not full and len(output) >= term_size.lines - 1:  # Limit reached
+        if not full and index >= term_size.lines - 2:  # Limit reached
             break
 
-    print('\033[K\n'.join(output) + '\033[J')  # Clear any ghosting
+    print('\x1b[J', end='', flush=True)  # Clear to end of screen
 
-    if not full and len(hosts) > term_size.lines - 1:  # Add overflow
+    if not full and len(hosts) > term_size.lines - 1:  # Overflow
         overflow = len(hosts) - (term_size.lines - 1)
         print('+{} more'.format(overflow), end='', flush=True)
 
