@@ -156,12 +156,16 @@ class Host:
         else:
             status += '  -'.ljust(stats_padding) * 5
 
+        last_failed = None  # Tracking of the status of the last result
+
         # History; includes failed pings
         for result in self.results:
             if result == -1:
-                status += '\x1b[32m.'
+                status += '\x1b[31m.' if last_failed in [False, None] else '.'
+                last_failed = True
             else:
-                status += '\x1b[32m!'
+                status += '\x1b[32m!' if last_failed in [True, None] else '!'
+                last_failed = False
 
         self.lock.release()
 
