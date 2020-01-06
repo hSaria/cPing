@@ -74,7 +74,7 @@ class Host:
             reply = False
 
             while not output.empty():
-                line = output.get(False).decode()
+                line = output.get().decode()
 
                 if line.startswith('ping:') and ping.poll() is not None:
                     raise Exception(line[6:].strip())
