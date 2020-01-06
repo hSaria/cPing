@@ -206,10 +206,11 @@ def args_init():
                         default=-1)
 
     args = parser.parse_args()
-    args.i = max(INTERVAL_MIN, args.i)
 
+    if args.i < INTERVAL_MIN:
+        parser.error('minimum interval is {}'.format(INTERVAL_MIN))
     if args.p != -1 and not 0 < args.p < 65536:
-        parser.error('Port outside of range 1-65535')
+        parser.error('port outside of range 1-65535')
 
     return args
 
