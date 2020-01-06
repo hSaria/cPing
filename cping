@@ -109,8 +109,10 @@ class Host:
 
                 time_start = time.time()
                 sock.connect(sock_addr[0][4])
-                self.add_result((time.time() - time_start) * 1000)
-                timeout = self.interval  # Suceeded; wait on next iteration
+                result = time.time() - time_start
+
+                self.add_result(result * 1000)  # Convert to milliseconds
+                timeout = self.interval - result  # Account for test duration
             except socket.timeout:
                 self.add_result(-1)
                 timeout = 0  # Expired; no need to wait on next iteration
