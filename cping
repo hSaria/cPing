@@ -18,6 +18,7 @@ import time
 
 INTERVAL_MIN = 0.1  # Lower bound on test interval
 RESULTS_DEQUE_MIN = 5  # Lower bound on the number of results for a host
+RE_PING_RESULT = re.compile('bytes from.+time=(?P<time>[.0-9]+) ms$')
 
 
 class Host:
@@ -74,17 +75,17 @@ class Host:
             reply = False
 
             while not output.empty():
-                line = output.get(False).decode()
+                line = output.get().decode()
 
                 if line.startswith('ping:') and ping.poll() is not None:
                     raise Exception(line[6:].strip())
 
-                match = re.search('bytes from.+time=([.0-9]+) ms$', line)
+                match = RE_PING_RESULT.search(line)
 
                 # Reply within interval range (i.e. not retrospective)
-                if match and float(match.group(1)) < self.interval * 1000:
+                if match and float(match.group('time')) < self.interval * 1000:
                     reply = True
-                    self.add_result(float(match.group(1)))
+                    self.add_result(float(match.group('time')))
 
             if not reply:  # Didn't find a reply within the interval
                 self.add_result(-1)
@@ -108,8 +109,10 @@ class Host:
 
                 time_start = time.time()
                 sock.connect(sock_addr[0][4])
-                self.add_result((time.time() - time_start) * 1000)
-                timeout = self.interval  # Suceeded; wait on next iteration
+                result = time.time() - time_start
+
+                self.add_result(result * 1000)  # Convert to milliseconds
+                timeout = self.interval - result  # Account for test duration
             except socket.timeout:
                 self.add_result(-1)
                 timeout = 0  # Expired; no need to wait on next iteration
@@ -205,10 +208,11 @@ def args_init():
                         default=-1)
 
     args = parser.parse_args()
-    args.i = max(INTERVAL_MIN, args.i)
 
+    if args.i < INTERVAL_MIN:
+        parser.error('minimum interval is {}'.format(INTERVAL_MIN))
     if args.p != -1 and not 0 < args.p < 65536:
-        parser.error('Port outside of range 1-65535')
+        parser.error('port outside of range 1-65535')
 
     return args
 
