@@ -8,7 +8,7 @@ with open('.github/README.md', 'r') as f:
 setup(
     name='cping',
     author='hSaria',
-    author_email='ping@heysaria.com',
+    author_email='sariahajjar@gmail.com',
     classifiers=[
         'Intended Audience :: System Administrators',
         'Intended Audience :: Telecommunications Industry',
