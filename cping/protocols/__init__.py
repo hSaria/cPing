@@ -5,7 +5,7 @@ import threading
 import time
 
 # Lower bound on the number of results
-RESULTS_LENGTH_MINIMUM = 5
+RESULTS_LENGTH_MINIMUM = 50
 
 
 class Host:
@@ -67,7 +67,7 @@ class Host:
             * Average (avg)
             * Maximum (max)
             * Standard deviation (stdev)
-            * Packet loss percentage (pktloss)
+            * Packet loss percentage (loss)
 
         Depending on the number of results, some may be `None`. The unit is ms.
         """
@@ -79,7 +79,7 @@ class Host:
             'avg': None,
             'max': None,
             'stdev': None,
-            'pktloss': None,
+            'loss': None,
         }
 
         # Remove failed pings and only get the delay value
@@ -89,7 +89,7 @@ class Host:
             summary['min'] = min(results) * 1000
             summary['avg'] = statistics.mean(results) * 1000
             summary['max'] = max(results) * 1000
-            summary['pktloss'] = (1 - (len(results) / len(self.results)))
+            summary['loss'] = (1 - (len(results) / len(self.results)))
 
             if len(results) > 1:
                 summary['stdev'] = statistics.stdev(results) * 1000
@@ -163,7 +163,7 @@ class Host:
             self._results = collections.deque(self._results, maxlen=new_length)
 
     def start(self, delay=0):
-        """Starts the ping loop.
+        """Clears `self.status` and starts the ping loop.
 
         Args:
             * delay (float): Delay before the ping loop starts.
@@ -178,6 +178,7 @@ class Host:
             time.sleep(delay)
             self._protocol.ping_loop(self)
 
+        self._status = None
         self.stop_signal.clear()
 
         if not self.is_running():
@@ -239,3 +240,17 @@ class Ping:
         """
         raise NotImplementedError('cping.protocols.Ping is a base class; it '
                                   'does not implement ping_loop')
+
+
+def stagger_start(hosts, interval):
+    """Start the hosts over the duration of an interval. For instance, three
+    hosts are staggered over an interval like so:
+    interval: |-------||-------||-------|
+    first:    |---1--->|---1--->|---1--->
+    second:      |---2--->|---2--->|---2--->
+    third:          |---3--->|---3--->|---3--->
+    """
+    stagger_interval = interval / len(hosts)
+
+    for index, host in enumerate(hosts):
+        host.start(delay=stagger_interval * index)

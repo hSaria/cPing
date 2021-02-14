@@ -47,6 +47,23 @@ class TestPing(unittest.TestCase):
         self.assertEqual(len(host.results), 1)
         self.assertNotEqual(host.results[0]['latency'], -1)
 
+    def test_os_error(self):
+        """Test OSError handling on `socket.sendto`."""
+        def patch(*_):
+            raise OSError('Some message')
+
+        host = cping.protocols.icmp.Ping()('127.0.0.1')
+
+        old_prope = cping.protocols.icmp.Session.probe
+        cping.protocols.icmp.Session.probe = patch
+
+        try:
+            # ping_loop is blocking but will exit when the exception is raised
+            host.protocol.ping_loop(host)
+            self.assertEqual(host.status, 'Some message')
+        finally:
+            cping.protocols.icmp.Session.probe = old_prope
+
 
 class TestGetChecksum(unittest.TestCase):
     """cping.protocols.icmp.get_checksum tests."""

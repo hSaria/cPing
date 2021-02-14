@@ -59,7 +59,7 @@ class Ping(cping.protocols.Ping):
 
             # Update the port in the host_info in case it was changed
             location = host_info[4][:1] + (self.port, ) + host_info[4][2:]
-            checkpoint = time.time()
+            checkpoint = time.perf_counter()
 
             try:
                 test_socket.connect(location)
@@ -71,7 +71,7 @@ class Ping(cping.protocols.Ping):
                 latency = -1
 
             if latency is None:
-                latency = time.time() - checkpoint
+                latency = time.perf_counter() - checkpoint
 
             host.add_result(latency, error)
             test_socket.close()

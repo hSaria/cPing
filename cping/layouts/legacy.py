@@ -4,6 +4,8 @@ import time
 
 import cping.layouts
 
+HISTOGRAM_COUNT_MINIMUM = 5
+
 
 class Layout(cping.layouts.Layout):
     """A line-based, non-interactive layout. The "original"."""
@@ -15,49 +17,19 @@ class Layout(cping.layouts.Layout):
             while any([host.is_running() for host in self.hosts]):
                 # Move to 1;1
                 print('\x1b[H', end='')
-                print(self.get_results_table(), end='', flush=True)
-                time.sleep(self.protocol.interval / 2)
+                print(get_results_table(self.hosts), end='', flush=True)
+                time.sleep(self.protocol.interval)
         finally:
             # Disable alternate screen buffer
             print('\x1b[?1049l', end='')
 
             # Print the last summary, including any overflowing hosts
-            print(self.get_results_table(all_hosts=True), end='')
-
-    def get_results_table(self, all_hosts=False):
-        """Returns a table (string) of the hosts' results.
-
-        Args:
-            all_hosts (bool): If `False`, table won't exceed screen's height.
-        """
-        table = ''
-        term_size = shutil.get_terminal_size()
-        host_padding = max([len(str(x)) for x in self.hosts]) + 1
-
-        for index, host in enumerate(self.hosts):
-            # Not printing all hosts and lines limit reached
-            if not all_hosts and index >= term_size.lines - 1:
-                break
-
-            host_line = format_host(host, host_padding, term_size.columns)
-
-            # Clear to end of line
-            table += host_line + '\x1b[K\n'
-
-        # Clear to end of screen
-        table += '\x1b[J'
-
-        # Not printing all hosts and some hosts overflowed
-        if not all_hosts and len(self.hosts) > term_size.lines - 1:
-            overflow = len(self.hosts) - (term_size.lines - 1)
-            table += '+{} more'.format(overflow)
-
-        return table
+            print(get_results_table(self.hosts, all_hosts=True), end='')
 
 
 def format_host(host, host_padding, line_width):
     """Returns a line representing a summary of the host's results."""
-    # line_width - host - min (8) - avg (8) - max (8) - stdev (8) - pktloss (8)
+    # line_width - host - min (8) - avg (8) - max (8) - stdev (8) - loss (8)
     host.set_results_length(line_width - host_padding - 8 * 5)
     line = str(host).ljust(host_padding)
 
@@ -70,15 +42,16 @@ def format_host(host, host_padding, line_width):
         else:
             line += '     -  '
 
-    if host.results_summary['pktloss'] is not None:
-        line += ' {:>5.0%}  '.format(host.results_summary['pktloss'])
+    if host.results_summary['loss'] is not None:
+        line += ' {:>5.0%}  '.format(host.results_summary['loss'])
     else:
         line += '    -   '
 
     # Output optimization by only including color markers when the color changes
     last_color = None
+    histogram_count = max(line_width - len(line), HISTOGRAM_COUNT_MINIMUM)
 
-    for result in host.results:
+    for result in list(host.results)[-histogram_count:]:
         if result['latency'] == -1:
             line += get_color('red', last_color) + '.'
             last_color = 'red'
@@ -103,3 +76,35 @@ def get_color(color, last_color=None):
         }.get(color, '')
 
     return ''
+
+
+def get_results_table(hosts, all_hosts=False):
+    """Returns a table (string) of the hosts' results.
+
+    Args:
+        hosts (list): A list... of hosts... Yeah.
+        all_hosts (bool): If `False`, table won't exceed screen's height.
+    """
+    table = ''
+    term_size = shutil.get_terminal_size()
+    host_padding = max([len(str(x)) for x in hosts]) + 1
+
+    for index, host in enumerate(hosts):
+        # Not printing all hosts and lines limit reached
+        if not all_hosts and index >= term_size.lines - 1:
+            break
+
+        host_line = format_host(host, host_padding, term_size.columns)
+
+        # Clear to end of line
+        table += host_line + '\x1b[K\n'
+
+    # Clear to end of screen
+    table += '\x1b[J'
+
+    # Not printing all hosts and some hosts overflowed
+    if not all_hosts and len(hosts) > term_size.lines - 1:
+        overflow = len(hosts) - (term_size.lines - 1)
+        table += '+{} more'.format(overflow)
+
+    return table

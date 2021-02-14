@@ -12,7 +12,8 @@ import cping.protocols
 class TestLayout(unittest.TestCase):
     """cping.layouts.legacy.Layout tests."""
     def test___call__(self):
-        """."""
+        """Ensure calling layout properly enters and exits the alternate buffer.
+        The layout should automatically exit when no hosts are running."""
         exit_signal = threading.Event()
 
         layout = cping.layouts.legacy.Layout(cping.protocols.Ping(0.5))
@@ -34,16 +35,6 @@ class TestLayout(unittest.TestCase):
         # Exit alternate buffer
         self.assertIn('\x1b[?1049l', output.getvalue())
 
-    def test_get_results_table(self):
-        """Create a table with too many hosts to ensure they don't overflow."""
-        layout = cping.layouts.legacy.Layout(cping.protocols.Ping())
-
-        for index in range(60):
-            layout.add_host(str(index))
-
-        self.assertIn(' more', layout.get_results_table())
-        self.assertNotIn(' more', layout.get_results_table(all_hosts=True))
-
 
 class TestFormatHost(unittest.TestCase):
     """cping.layouts.legacy.format_host tests."""
@@ -60,7 +51,7 @@ class TestFormatHost(unittest.TestCase):
         host = cping.protocols.Ping()('localhost')
         old_length = host.results.maxlen
 
-        cping.layouts.legacy.format_host(host, 4, 80)
+        cping.layouts.legacy.format_host(host, 4, 150)
         self.assertGreater(host.results.maxlen, old_length)
 
     def test_results_histogram(self):
@@ -87,6 +78,19 @@ class TestGetColor(unittest.TestCase):
     def test_non_existent_color(self):
         """A non-existent color should return an empty string"""
         self.assertEqual(cping.layouts.legacy.get_color('hi'), '')
+
+
+class TestGetResultsTable(unittest.TestCase):
+    """cping.layouts.legacy.get_results_table tests."""
+    def test_overflow(self):
+        """Create a table with too many hosts to ensure they don't overflow."""
+        hosts = [cping.protocols.Ping()(str(x)) for x in range(60)]
+
+        table = cping.layouts.legacy.get_results_table(hosts)
+        self.assertIn(' more', table)
+
+        table = cping.layouts.legacy.get_results_table(hosts, all_hosts=True)
+        self.assertNotIn(' more', table)
 
 
 def strip_colors(data):

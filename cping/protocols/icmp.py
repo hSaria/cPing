@@ -28,7 +28,12 @@ class Ping(cping.protocols.Ping):
         session = Session(host_info)
 
         while True:
-            latency = session.probe(self.interval)
+            try:
+                latency = session.probe(self.interval)
+            except OSError as exception:
+                host.status = str(exception)
+                break
+
             host.add_result(latency)
 
             # Account for the duration of the previous test
@@ -112,8 +117,12 @@ class Session():
         else:
             self.icmpv6_socket.sendto(request, self.host_info[4])
 
-        checkpoint = time.time()
-        latency = time.time() - checkpoint if receive_event.wait(wait) else -1
+        checkpoint = time.perf_counter()
+
+        if receive_event.wait(wait):
+            latency = time.perf_counter() - checkpoint
+        else:
+            latency = -1
 
         # Remove from the queue
         self.match_queue.remove((reply, receive_event))

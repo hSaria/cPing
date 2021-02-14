@@ -3,6 +3,7 @@ import argparse
 import sys
 
 import cping
+import cping.layouts
 
 INTERVAL_MINIMUM = 0.1
 
@@ -40,20 +41,6 @@ def args_init(args=None):
     return args
 
 
-def start_hosts_staggered(hosts, interval):
-    """Start the hosts over the duration of an interval. For instance, three
-    hosts are staggered over an interval like so:
-    interval: |-------||-------||-------|
-    first:    |---1--->|---1--->|---1--->
-    second:      |---2--->|---2--->|---2--->
-    third:          |---3--->|---3--->|---3--->
-    """
-    stagger_interval = interval / len(hosts)
-
-    for index, host in enumerate(hosts):
-        host.start(delay=stagger_interval * index)
-
-
 def main(args=None):
     """Command line utility entry point.
 
@@ -77,7 +64,7 @@ def main(args=None):
         for host in args.host:
             layout.add_host(host)
 
-        start_hosts_staggered(layout.hosts, layout.protocol.interval)
+        cping.protocols.stagger_start(layout.hosts, layout.protocol.interval)
         layout()
     except KeyboardInterrupt:
         pass

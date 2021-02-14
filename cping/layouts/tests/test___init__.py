@@ -4,6 +4,8 @@ import unittest
 import cping.layouts
 import cping.protocols
 
+# pylint: disable=protected-access
+
 
 class TestLayout(unittest.TestCase):
     """cping.layouts.Layout tests."""

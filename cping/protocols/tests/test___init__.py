@@ -78,62 +78,62 @@ class TestHost(unittest.TestCase):
         self.assertEqual(host.results_summary['avg'], 800)
         self.assertEqual(host.results_summary['max'], 800)
         self.assertIs(host.results_summary['stdev'], None)
-        self.assertEqual(host.results_summary['pktloss'], 0)
+        self.assertEqual(host.results_summary['loss'], 0)
 
         host.add_result(0.6)
         self.assertEqual(host.results_summary['min'], 600)
         self.assertEqual(host.results_summary['avg'], 700)
         self.assertEqual(host.results_summary['max'], 800)
         self.assertEqual(round(host.results_summary['stdev'], 3), 141.421)
-        self.assertEqual(host.results_summary['pktloss'], 0)
+        self.assertEqual(host.results_summary['loss'], 0)
 
         host.add_result(-1)
         self.assertEqual(host.results_summary['min'], 600)
         self.assertEqual(host.results_summary['avg'], 700)
         self.assertEqual(host.results_summary['max'], 800)
         self.assertEqual(round(host.results_summary['stdev'], 3), 141.421)
-        self.assertEqual(round(host.results_summary['pktloss'], 3), 0.333)
+        self.assertEqual(round(host.results_summary['loss'], 3), 0.333)
 
     def test_set_results_length(self):
         """Change the results length."""
         host = cping.protocols.Ping()('localhost')
 
-        for i in range(10):
+        for i in range(120):
             host.add_result(i)
 
         self.assertEqual(len(host.results),
                          cping.protocols.RESULTS_LENGTH_MINIMUM)
 
-        host.set_results_length(10)
+        host.set_results_length(120)
 
-        for i in range(10):
+        for i in range(120):
             host.add_result(i)
 
-        self.assertEqual(len(host.results), 10)
+        self.assertEqual(len(host.results), 120)
 
     def test_set_results_length_lock(self):
         """Ensure set_results_length locks _results_lock."""
         host = cping.protocols.Ping()('localhost')
-        host.set_results_length(10)
+        host.set_results_length(150)
 
-        for i in range(10):
+        for i in range(150):
             host.add_result(i)
 
         host._results_lock.acquire()
 
         # Setting the same length will not lock (no change is made)
-        host.set_results_length(10)
+        host.set_results_length(150)
 
         # Setting a different length requires locking
-        thread = threading.Thread(target=host.set_results_length, args=(6, ))
+        thread = threading.Thread(target=host.set_results_length, args=(120, ))
         thread.start()
         time.sleep(0.1)
-        self.assertEqual(len(host.results), 10)
+        self.assertEqual(len(host.results), 150)
 
         # Release should allow the thread to change the length
         host._results_lock.release()
         thread.join()
-        self.assertEqual(len(host.results), 6)
+        self.assertEqual(len(host.results), 120)
 
     def test_set_results_length_invalid_type_new_length(self):
         """set_results_length with wrong new_length."""
@@ -148,11 +148,13 @@ class TestHost(unittest.TestCase):
 
         host = cping.protocols.Ping()('localhost')
         host.protocol.ping_loop = dummy_ping_loop
+        host.status = 'Cleared at start'
 
         # Confirm that start clears stop_signal
         host.stop_signal.set()
         host.start()
 
+        self.assertIsNone(host.status)
         self.assertTrue(host.is_running())
         self.assertFalse(host.stop_signal.is_set())
 
@@ -263,3 +265,27 @@ class TestPing(unittest.TestCase):
         """Create an instance of Ping with an invalid interval type."""
         with self.assertRaisesRegex(TypeError, 'interval must be a float'):
             cping.protocols.Ping('hi')
+
+
+class TestStaggerStart(unittest.TestCase):
+    """cping.protocols.stagger_start tests."""
+    def test_timing(self):
+        """Confirm three hosts are staggered over 0.6 seconds, with the first
+        starting immediately, and then 0.2 before each of the two that follow."""
+        ping = cping.protocols.Ping()
+        ping.ping_loop = lambda _: startup_times.append(time.time())
+
+        # Record the time at which the hosts start
+        startup_fuzz = 0.1
+        startup_times = []
+
+        checkpoint = time.time()
+        hosts = [ping('1'), ping('2'), ping('3')]
+        cping.protocols.stagger_start(hosts, 0.6)
+
+        # Wait for the last host to finish
+        hosts[2]._test_thread.join()
+
+        self.assertLess(startup_times[0] - checkpoint, startup_fuzz)
+        self.assertLess(startup_times[1] - checkpoint, 0.2 + startup_fuzz)
+        self.assertLess(startup_times[2] - checkpoint, 0.4 + startup_fuzz)
