@@ -11,6 +11,7 @@ import time
 import cping.protocols
 
 DATA_LENGTH = 24
+SOCKET_TYPE = socket.SOCK_RAW if sys.platform == 'win32' else socket.SOCK_DGRAM
 
 
 class Ping(cping.protocols.Ping):
@@ -46,20 +47,10 @@ class Ping(cping.protocols.Ping):
 
 class Session():
     """A ping session to a host."""
+    icmpv4_socket = icmpv6_socket = None
     match_queue = []
     sequence = -1
-    sequence_lock = threading.Lock()
-
-    icmpv4_socket = socket.socket(
-        socket.AF_INET,
-        socket.SOCK_RAW if sys.platform == 'win32' else socket.SOCK_DGRAM,
-        socket.IPPROTO_ICMP,
-    )
-    icmpv6_socket = socket.socket(
-        socket.AF_INET6,
-        socket.SOCK_RAW if sys.platform == 'win32' else socket.SOCK_DGRAM,
-        socket.IPPROTO_ICMPV6,
-    )
+    sessions_lock = threading.Lock()
 
     def __init__(self, host_info):
         """Constructor.
@@ -69,6 +60,18 @@ class Session():
         """
         self.host_info = host_info
         self.identifier = random.randrange(1, 2**16)
+
+        with Session.sessions_lock:
+            if Session.icmpv4_socket is None:
+                Session.icmpv4_socket = socket.socket(socket.AF_INET,
+                                                      SOCKET_TYPE,
+                                                      socket.IPPROTO_ICMP)
+                Session.icmpv6_socket = socket.socket(socket.AF_INET6,
+                                                      SOCKET_TYPE,
+                                                      socket.IPPROTO_ICMPV6)
+
+                # Begin listening on the ICMP socekts. Daemonized to exit with cping
+                threading.Thread(target=Session.receiver, daemon=True).start()
 
     def create_icmp_echo(self):
         """Returns tuple of an ICMP echo request and its expected reply (bytes)."""
@@ -94,7 +97,7 @@ class Session():
     @staticmethod
     def next_sequence():
         """Returns the next sequence, incrementing it by 1."""
-        with Session.sequence_lock:
+        with Session.sessions_lock:
             Session.sequence += 1
 
         return Session.sequence
@@ -112,12 +115,12 @@ class Session():
         # Add to the expected packet to the receiver queue
         self.match_queue.append((reply, receive_event))
 
+        checkpoint = time.perf_counter()
+
         if self.host_info[0] == socket.AF_INET:
             self.icmpv4_socket.sendto(request, self.host_info[4])
         else:
             self.icmpv6_socket.sendto(request, self.host_info[4])
-
-        checkpoint = time.perf_counter()
 
         if receive_event.wait(wait):
             latency = time.perf_counter() - checkpoint
@@ -181,7 +184,3 @@ def get_checksum(data):
 def generate_data(length, data=b':github.com/hsaria/cping'):
     """Returns string which repeats `data` until it reaches `length`."""
     return (data * (length // len(data) + 1))[:length]
-
-
-# Begin listening on the ICMP socekts. Daemonized to exit when cping exits
-threading.Thread(target=Session.receiver, daemon=True).start()

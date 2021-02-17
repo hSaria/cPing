@@ -80,16 +80,16 @@ class TestGetColor(unittest.TestCase):
         self.assertEqual(cping.layouts.legacy.get_color('hi'), '')
 
 
-class TestGetResultsTable(unittest.TestCase):
-    """cping.layouts.legacy.get_results_table tests."""
+class TestGetTable(unittest.TestCase):
+    """cping.layouts.legacy.get_table tests."""
     def test_overflow(self):
         """Create a table with too many hosts to ensure they don't overflow."""
         hosts = [cping.protocols.Ping()(str(x)) for x in range(60)]
 
-        table = cping.layouts.legacy.get_results_table(hosts)
+        table = cping.layouts.legacy.get_table(hosts)
         self.assertIn(' more', table)
 
-        table = cping.layouts.legacy.get_results_table(hosts, all_hosts=True)
+        table = cping.layouts.legacy.get_table(hosts, all_hosts=True)
         self.assertNotIn(' more', table)
 
 

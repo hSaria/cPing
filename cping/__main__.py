@@ -68,15 +68,11 @@ def main(args=None):
         layout()
     except KeyboardInterrupt:
         pass
-    except (TypeError, ValueError) as exception:
-        return str(exception)
     finally:
         if 'layout' in locals():
             for host in layout.hosts:
                 host.stop()
 
-    return None
-
 
 if __name__ == '__main__':
-    sys.exit(main())
+    sys.exit(main())  # pragma: no cover

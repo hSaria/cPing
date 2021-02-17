@@ -17,14 +17,14 @@ class Layout(cping.layouts.Layout):
             while any([host.is_running() for host in self.hosts]):
                 # Move to 1;1
                 print('\x1b[H', end='')
-                print(get_results_table(self.hosts), end='', flush=True)
+                print(get_table(self.hosts), end='', flush=True)
                 time.sleep(self.protocol.interval)
         finally:
             # Disable alternate screen buffer
             print('\x1b[?1049l', end='')
 
             # Print the last summary, including any overflowing hosts
-            print(get_results_table(self.hosts, all_hosts=True), end='')
+            print(get_table(self.hosts, all_hosts=True), end='')
 
 
 def format_host(host, host_padding, line_width):
@@ -78,7 +78,7 @@ def get_color(color, last_color=None):
     return ''
 
 
-def get_results_table(hosts, all_hosts=False):
+def get_table(hosts, all_hosts=False):
     """Returns a table (string) of the hosts' results.
 
     Args:

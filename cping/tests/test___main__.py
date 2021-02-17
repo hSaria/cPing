@@ -70,11 +70,6 @@ class TestMain(unittest.TestCase):
         finally:
             cping.PingTCP.ping_loop = old_ping_loop
 
-    def test_ping_tcp_invalid_port(self):
-        """Supply an invalid port to TCP."""
-        error = cping.__main__.main(['-p', '123456', 'localhost'])
-        self.assertIsNotNone(error)
-
     def test_signal_interrupt(self):
         """Sending an interrupt signal should exit gracefully."""
         process = subprocess.Popen(
