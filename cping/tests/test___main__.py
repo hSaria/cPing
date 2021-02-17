@@ -4,8 +4,8 @@ import io
 import signal
 import subprocess
 import sys
-import time
 import threading
+import time
 import unittest
 
 import cping
@@ -14,6 +14,19 @@ import cping.__main__
 
 class TestMain(unittest.TestCase):
     """cping.__main__.main tests."""
+    def test_default_layout(self):
+        """Confirm that default layout is `modern`."""
+        trigger = threading.Event()
+
+        old_call = cping.LayoutModern.__call__
+        cping.LayoutModern.__call__ = lambda _: trigger.set()
+
+        try:
+            cping.__main__.main(['localhost'])
+            self.assertTrue(trigger.is_set())
+        finally:
+            cping.LayoutModern.__call__ = old_call
+
     def test_interval_minimum_value(self):
         """Ensure the minimum interval value is respected."""
         output = io.StringIO()
@@ -47,7 +60,7 @@ class TestMain(unittest.TestCase):
 
         try:
             with contextlib.redirect_stdout(None):
-                cping.__main__.main(['localhost'])
+                cping.__main__.main(['-l', 'legacy', 'localhost'])
 
             # The ICMP class was called
             self.assertTrue(trigger.is_set())
@@ -63,7 +76,7 @@ class TestMain(unittest.TestCase):
 
         try:
             with contextlib.redirect_stdout(None):
-                cping.__main__.main(['-p', '80', 'localhost'])
+                cping.__main__.main(['-l', 'legacy', '-p', '80', 'localhost'])
 
             # The TCP class was called
             self.assertTrue(trigger.is_set())
@@ -73,7 +86,7 @@ class TestMain(unittest.TestCase):
     def test_signal_interrupt(self):
         """Sending an interrupt signal should exit gracefully."""
         process = subprocess.Popen(
-            [sys.executable, '-m', 'cping', '127.0.0.1'],
+            [sys.executable, '-m', 'cping', '-l', 'legacy', '127.0.0.1'],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
         )
