@@ -89,9 +89,10 @@ class TestLayout(unittest.TestCase):
         `window.refresh`."""
         host1 = cping.protocols.Ping()('host1')
         host2 = cping.protocols.Ping()('host2')
+        table = cping.layouts.modern.get_table([host1, host2])
 
         window = unittest.mock.MagicMock()
-        table = cping.layouts.modern.get_table([host1, host2])
+        window.getmaxyx = lambda: (24, 80)
 
         cping.layouts.modern.Layout.render_table(window, table, 0)
 
@@ -119,6 +120,7 @@ class TestLayout(unittest.TestCase):
 
         window = unittest.mock.MagicMock()
         window.erase = curses_error
+        window.getmaxyx = lambda: (24, 80)
 
         cping.layouts.modern.Layout.render_table(window, [], 0)
 
@@ -137,6 +139,7 @@ class TestLayout(unittest.TestCase):
 
         window = unittest.mock.MagicMock()
         window.getch = getch
+        window.getmaxyx = lambda: (24, 80)
         curses.flushinp = flushinp_trigger.set
 
         layout = cping.layouts.modern.Layout(cping.protocols.Ping())
@@ -185,6 +188,7 @@ class TestLayout(unittest.TestCase):
         keys = [ord(str(x)) for x in range(7)]
         window = unittest.mock.MagicMock()
         window.getch = TestLayout.wrap_curses_getch(keys)
+        window.getmaxyx = lambda: (24, 80)
 
         old_get_table_sort_key = cping.layouts.modern.get_table_sort_key
         cping.layouts.modern.get_table_sort_key = unittest.mock.MagicMock()
@@ -210,6 +214,7 @@ class TestLayout(unittest.TestCase):
         keys = [curses.KEY_DOWN, ord('s')]
         window = unittest.mock.MagicMock()
         window.getch = TestLayout.wrap_curses_getch(keys)
+        window.getmaxyx = lambda: (24, 80)
         layout.render(window)
 
         # Host was not running; should be started
@@ -236,6 +241,7 @@ class TestLayout(unittest.TestCase):
 
         window = unittest.mock.MagicMock()
         window.getch = TestLayout.wrap_curses_getch([ord('s')])
+        window.getmaxyx = lambda: (24, 80)
         layout.render(window)
 
         # Hosts were not running; should be started

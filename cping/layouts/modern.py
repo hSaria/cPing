@@ -2,7 +2,6 @@
 import curses
 import math
 import re
-import shutil
 import sys
 
 import cping.layouts
@@ -73,7 +72,7 @@ class Layout(cping.layouts.Layout):
             table (list): The results table (i.e. `get_table`).
             selection (int): The index of the selected row.
         """
-        columns, lines = shutil.get_terminal_size()
+        lines, columns = window.getmaxyx()
 
         page = get_table_page(table, lines - 1, selection)
         page_count = math.ceil(len(table) / (lines - 1))
