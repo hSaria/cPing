@@ -158,7 +158,58 @@ class TestLayout(unittest.TestCase):
         interval = layout.protocol.interval * 1000
         self.assertIn(unittest.mock.call.timeout(interval), window.mock_calls)
 
-    def test_render_function_selection(self):
+    def test_render_function_burst_mode(self):
+        """Enable/disable burst mode on a single host."""
+        layout = cping.layouts.modern.Layout(cping.protocols.Ping())
+        layout.add_host('host1')
+        layout.add_host('host2')
+
+        for host in layout.hosts:
+            host.burst_mode.set = unittest.mock.MagicMock()
+            host.burst_mode.clear = unittest.mock.MagicMock()
+
+        keys = [curses.KEY_DOWN, ord('b')]
+        window = unittest.mock.MagicMock()
+        window.getch = TestLayout.wrap_curses_getch(keys)
+        window.getmaxyx = lambda: (24, 80)
+        layout.render(window)
+
+        # Both hosts are cleared, but only host1 would've been set
+        self.assertTrue(layout.hosts[0].burst_mode.set.called)
+        self.assertFalse(layout.hosts[1].burst_mode.set.called)
+        self.assertTrue(layout.hosts[0].burst_mode.clear.called)
+        self.assertTrue(layout.hosts[1].burst_mode.clear.called)
+
+    def test_render_function_burst_mode_all(self):
+        """Enable/disable burst mode on all hosts."""
+        layout = cping.layouts.modern.Layout(cping.protocols.Ping())
+        layout.add_host('host1')
+        layout.add_host('host2')
+
+        for host in layout.hosts:
+            host.burst_mode.set = unittest.mock.MagicMock()
+            host.burst_mode.clear = unittest.mock.MagicMock()
+
+        window = unittest.mock.MagicMock()
+        window.getch = TestLayout.wrap_curses_getch([])
+        window.getmaxyx = lambda: (24, 80)
+        layout.render(window)
+
+        # If no function matched, the default will clear burst mode
+        for host in layout.hosts:
+            self.assertTrue(host.burst_mode.clear.called)
+            host.burst_mode.clear.reset_mock()
+            self.assertFalse(host.burst_mode.clear.called)
+
+        window.getch = TestLayout.wrap_curses_getch([ord('b')])
+        layout.render(window)
+
+        # Burst mode will be cleared at the end
+        for host in layout.hosts:
+            self.assertTrue(host.burst_mode.set.called)
+            self.assertTrue(host.burst_mode.clear.called)
+
+    def test_render_function_change_selection(self):
         """Ensure the selection changes but doesn't go out of the table bounds."""
         layout = cping.layouts.modern.Layout(cping.protocols.Ping())
         layout.add_host('1')
@@ -207,9 +258,11 @@ class TestLayout(unittest.TestCase):
         """Start/stop a single host."""
         layout = cping.layouts.modern.Layout(cping.protocols.Ping())
         layout.add_host('host1')
+        layout.add_host('host2')
 
-        layout.hosts[0].start = unittest.mock.MagicMock()
-        layout.hosts[0].stop = unittest.mock.MagicMock()
+        for host in layout.hosts:
+            host.start = unittest.mock.MagicMock()
+            host.stop = unittest.mock.MagicMock()
 
         keys = [curses.KEY_DOWN, ord('s')]
         window = unittest.mock.MagicMock()
@@ -217,17 +270,20 @@ class TestLayout(unittest.TestCase):
         window.getmaxyx = lambda: (24, 80)
         layout.render(window)
 
-        # Host was not running; should be started
+        # Only host1 should be started
         self.assertTrue(layout.hosts[0].start.called)
+        self.assertFalse(layout.hosts[1].start.called)
 
-        # Mark the host as running
-        layout.hosts[0].is_running = unittest.mock.MagicMock(return_value=True)
+        # Mark the hosts as running
+        for host in layout.hosts:
+            host.is_running = unittest.mock.MagicMock(return_value=True)
 
         window.getch = TestLayout.wrap_curses_getch(keys)
         layout.render(window)
 
-        # Host was running; should be stopped
+        # Only host1 should be stopped
         self.assertTrue(layout.hosts[0].stop.called)
+        self.assertFalse(layout.hosts[1].stop.called)
 
     def test_render_function_start_stop_all(self):
         """Start/stop all hosts."""

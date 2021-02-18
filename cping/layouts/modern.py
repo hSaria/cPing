@@ -120,9 +120,11 @@ class Layout(cping.layouts.Layout):
     def render(self, window):
         """Start rendering the layout. Blocking function meant to be called with
         `curses.wrapper(self.render)`."""
+        # pylint: disable=too-many-branches
+        Layout.initialize_colors()
+
         # Set the timeout (ms) for `windows.getch`
         window.timeout(int(self.protocol.interval * 1000))
-        Layout.initialize_colors()
 
         # State tracking
         button = selection = sort_key = 0
@@ -140,6 +142,13 @@ class Layout(cping.layouts.Layout):
                 selection = max(selection - 1, 0)
             elif button == curses.KEY_DOWN:
                 selection = min(selection + 1, len(self.hosts))
+            elif button == ord('b'):
+                # Burst mode
+                if selection > 0:
+                    table[selection]['host'].burst_mode.set()
+                else:
+                    for host in self.hosts:
+                        host.burst_mode.set()
             elif button == ord('s'):
                 # Start or stop the selected host (all if header selected)
                 if selection > 0:
@@ -156,6 +165,10 @@ class Layout(cping.layouts.Layout):
             elif button in range(48, 48 + 7):
                 # Sorting: 48 is the '0' key, so this is effectively `range(7)`
                 sort_key = get_table_sort_key(button % 48, sort_key)
+            else:
+                # Clear burst mode
+                for host in self.hosts:
+                    host.burst_mode.clear()
 
 
 def get_host_columns(host):
@@ -250,6 +263,7 @@ def get_table_footer(page_count, page_number, selection):
         footer += '(All): '
 
     # Host actions
+    footer += '[B]urst mode (hold), '
     footer += '[S]tart/[S]top | '
 
     # Layout actions

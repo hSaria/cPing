@@ -31,6 +31,7 @@ class Host:
                             'cping.protocols.Ping')
 
         self._address = address
+        self._burst_mode = threading.Event()
         self._protocol = protocol
         self._results = collections.deque(maxlen=RESULTS_LENGTH_MINIMUM)
         self._results_lock = threading.Lock()
@@ -46,6 +47,11 @@ class Host:
     def address(self):
         """Ping destination."""
         return self._address
+
+    @property
+    def burst_mode(self):
+        """An instance of `threading.Event` to use burst mode when set."""
+        return self._burst_mode
 
     @property
     def protocol(self):
@@ -228,6 +234,21 @@ class Ping:
             raise TypeError('interval must be a float')
 
         self._interval = value
+
+    def get_timeout(self, latency, host):
+        """Returns a float indicating the time to wait before the next ping based
+        on the previous result.
+
+        Args:
+            latency (float): The latency of the previous ping.
+            host (cping.protocols.Host): The test's host.
+        """
+        # No timeout if test failed or burst mode is enabled
+        if latency == -1 or host.burst_mode.is_set():
+            return 0
+
+        # Account for the latency of the previous test
+        return self.interval - latency
 
     def ping_loop(self, host):
         """A blocking call that will begin pinging the host and registering the

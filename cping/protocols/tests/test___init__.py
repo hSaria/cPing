@@ -5,7 +5,7 @@ import unittest
 
 import cping.protocols
 
-# pylint: disable=protected-access
+# pylint: disable=protected-access, too-many-public-methods
 
 
 class TestHost(unittest.TestCase):
@@ -230,6 +230,14 @@ class TestHost(unittest.TestCase):
         with self.assertRaisesRegex(AttributeError, 'can.t set attribute'):
             host.address = 'hi'
 
+    def test_read_only_burst_mode(self):
+        """Host's burst_mode attribute is read only."""
+        host = cping.protocols.Ping()('localhost')
+        self.assertTrue(isinstance(host.burst_mode, threading.Event))
+
+        with self.assertRaisesRegex(AttributeError, 'can.t set attribute'):
+            host.burst_mode = None
+
     def test_read_only_protocol(self):
         """Host's protocol attribute is read only."""
         ping = cping.protocols.Ping()
@@ -256,6 +264,20 @@ class TestHost(unittest.TestCase):
 
 class TestPing(unittest.TestCase):
     """cping.protocols.Ping tests."""
+    def test_get_timeout(self):
+        """Timeout should account for the test latency and burst mode."""
+        host = cping.protocols.Ping()('host')
+
+        # The latency is subtracted from the protocol interval
+        self.assertEqual(host.protocol.get_timeout(0.3, host), 0.7)
+
+        # No timeout when the ping failed (already spent the full interval)
+        self.assertEqual(host.protocol.get_timeout(-1, host), 0)
+
+        # No timeout when the burst mode is enabled
+        host.burst_mode.set()
+        self.assertEqual(host.protocol.get_timeout(0.3, host), 0)
+
     def test_ping_loop(self):
         """Ensure ping_loop raises NotImplementedError."""
         with self.assertRaises(NotImplementedError):

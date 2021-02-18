@@ -37,11 +37,8 @@ class Ping(cping.protocols.Ping):
 
             host.add_result(latency)
 
-            # Account for the duration of the previous test
-            timeout = self.interval - latency if latency != -1 else 0
-
             # Sleep until signaled to stop or the timeout expires
-            if host.stop_signal.wait(timeout):
+            if host.stop_signal.wait(self.get_timeout(latency, host)):
                 break
 
 
