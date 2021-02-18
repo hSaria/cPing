@@ -92,7 +92,7 @@ class Layout(cping.layouts.Layout):
 
                 # Highlight selection; account for pagination
                 if index == selection % (lines - 1):
-                    row['attrs'] += curses.A_BOLD
+                    row['attrs'] |= curses.A_BOLD
 
                 window.addnstr(index, 0, row['line'], columns, row['attrs'])
 
