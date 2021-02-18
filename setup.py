@@ -2,7 +2,7 @@ from setuptools import setup
 
 REQUIRES_PYTHON = '>=3.6.0'
 
-with open('.github/README.md', 'r') as f:
+with open('README.md', 'r') as f:
     long_description = f.read()
 
 setup(
@@ -17,11 +17,12 @@ setup(
         'Topic :: System :: Networking :: Monitoring', 'Topic :: Utilities'
     ],
     description='Concurrent multi-host ping (ICMP and TCP)',
+    entry_points={'console_scripts': ['cping = cping.__main__:main']},
+    install_required=['windows-curses; sys_platform != "win32"'],
     license='MIT',
     long_description=long_description,
     long_description_content_type='text/markdown',
     python_requires=REQUIRES_PYTHON,
-    scripts=['cping'],
     url='https://github.com/hSaria/cPing',
-    version='0.0.16-dev',
+    version='0.1.0-dev',
 )
