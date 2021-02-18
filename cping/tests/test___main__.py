@@ -39,6 +39,7 @@ class TestMain(unittest.TestCase):
 
     def test_keyboard_interrupt(self):
         """Confirm that a keyboard interrupt is handled."""
+        # pylint: disable=no-self-use
         def patch(*_):
             raise KeyboardInterrupt()
 
@@ -47,7 +48,7 @@ class TestMain(unittest.TestCase):
 
         try:
             # KeyboardInterrupt shouldn't raise an exception or return an error
-            self.assertIsNone(cping.__main__.main(['localhost']))
+            cping.__main__.main(['localhost'])
         finally:
             cping.protocols.stagger_start = old_stagger_start
 

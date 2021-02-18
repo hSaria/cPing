@@ -111,7 +111,7 @@ class TestLayout(unittest.TestCase):
 
         # The header is selected
         header_attributes = list(window.mock_calls[1])[1][4]
-        self.assertTrue(header_attributes & curses.A_BOLD == curses.A_BOLD)
+        self.assertEqual(header_attributes & curses.A_BOLD, curses.A_BOLD)
 
     def test_render_table_curses_error_handling(self):
         """`render_table` should handle exceptions of `curses.error`."""
