@@ -67,7 +67,7 @@ class Session():
                                                       SOCKET_TYPE,
                                                       socket.IPPROTO_ICMPV6)
 
-                # Begin listening on the ICMP socekts. Daemonized to exit with cping
+                # Begin listening on the ICMP sockets. Daemonized to exit with cping
                 threading.Thread(target=Session.receiver, daemon=True).start()
 
     def create_icmp_echo(self):
@@ -96,8 +96,7 @@ class Session():
         """Returns the next sequence, incrementing it by 1."""
         with Session.sessions_lock:
             Session.sequence += 1
-
-        return Session.sequence
+            return Session.sequence
 
     def probe(self, wait):
         """Returns the latency to `self.host_info` in seconds. If the host does
@@ -109,8 +108,8 @@ class Session():
         request, reply = self.create_icmp_echo()
         receive_event = threading.Event()
 
-        # Add to the expected packet to the receiver queue
-        self.match_queue.append((reply, receive_event))
+        # Add the expected packet to the receiver queue
+        Session.match_queue.append((reply, receive_event))
 
         checkpoint = time.perf_counter()
 
@@ -125,10 +124,7 @@ class Session():
             latency = -1
 
         # Remove from the queue
-        self.match_queue.remove((reply, receive_event))
-
-        # Increment the sequence for the next ping
-        self.sequence += 1
+        Session.match_queue.remove((reply, receive_event))
 
         return latency
 
