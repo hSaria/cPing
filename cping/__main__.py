@@ -63,10 +63,6 @@ def main(args=None):
 
     Args:
         args (list): A list of program arguments. Defaults to sys.argv.
-
-    Returns:
-        A string indicating status/error. Otherwise, returns None. It is meant to
-        be used as sys.exit(cping.__main__.main()).
     """
     args = args_init(args)
 
@@ -95,4 +91,4 @@ def main(args=None):
 
 
 if __name__ == '__main__':
-    sys.exit(main())  # pragma: no cover
+    main()  # pragma: no cover
