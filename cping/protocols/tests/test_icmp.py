@@ -1,5 +1,6 @@
 """cping.protocols.icmp tests"""
 import unittest
+import unittest.mock
 
 import cping.protocols.icmp
 import cping.protocols.tests
@@ -54,28 +55,21 @@ class TestPing(unittest.TestCase):
 
         host = cping.protocols.icmp.Ping()('127.0.0.1')
 
-        old_prope = cping.protocols.icmp.Session.probe
-        cping.protocols.icmp.Session.probe = patch
-
-        try:
+        with unittest.mock.patch('threading.Event.wait', patch):
             # ping_loop is blocking but will exit when the exception is raised
             host.protocol.ping_loop(host)
             self.assertEqual(host.status, 'Some message')
-        finally:
-            cping.protocols.icmp.Session.probe = old_prope
 
 
-class TestGetChecksum(unittest.TestCase):
-    """cping.protocols.icmp.get_checksum tests."""
-    def test_odd_sized(self):
+class TestSession(unittest.TestCase):
+    """cping.protocols.icmp.Session tests."""
+    def test_get_checksum_odd_sized(self):
         """Ensure that odd-lengthed data is padded accordingly."""
-        even_checksum = cping.protocols.icmp.get_checksum(b'\x01\x02\x03\x00')
-        odd_checksum = cping.protocols.icmp.get_checksum(b'\x01\x02\x03')
-        self.assertEqual(even_checksum, odd_checksum)
+        even = cping.protocols.icmp.Session.get_checksum(b'\x01\x02\x03\x00')
+        odd = cping.protocols.icmp.Session.get_checksum(b'\x01\x02\x03')
+        self.assertEqual(even, odd)
 
-
-class TestGenerateData(unittest.TestCase):
-    """cping.protocols.icmp.generate_data tests."""
-    def test_loop_data(self):
+    def test__generate_data(self):
         """Loop data until length."""
-        self.assertEqual(cping.protocols.icmp.generate_data(5, '123'), '12312')
+        data = cping.protocols.icmp.Session.generate_data(5, '123')
+        self.assertEqual(data, '12312')
