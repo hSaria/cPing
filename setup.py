@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import find_packages, setup
 
 REQUIRES_PYTHON = '>=3.6.0'
 
@@ -22,7 +22,7 @@ setup(
     license='MIT',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    packages=['cping'],
+    packages=find_packages(),
     python_requires=REQUIRES_PYTHON,
     url='https://github.com/hSaria/cPing',
     version='0.1.2-dev',
