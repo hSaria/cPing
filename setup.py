@@ -24,5 +24,5 @@ setup(
     long_description_content_type='text/markdown',
     python_requires=REQUIRES_PYTHON,
     url='https://github.com/hSaria/cPing',
-    version='0.1.0-dev',
+    version='0.1.0',
 )
