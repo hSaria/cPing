@@ -18,7 +18,7 @@ setup(
     ],
     description='Concurrent multi-host ping (ICMP and TCP)',
     entry_points={'console_scripts': ['cping = cping.__main__:main']},
-    install_required=['windows-curses; sys_platform != "win32"'],
+    install_requires=['windows-curses; sys_platform == "win32"'],
     license='MIT',
     long_description=long_description,
     long_description_content_type='text/markdown',
