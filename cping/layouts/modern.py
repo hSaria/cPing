@@ -200,10 +200,13 @@ def get_table(hosts, sort_key=0):
         sort_key (int): Passed to `sort_hosts`.
     """
     # Table starts with the header
-    table = [{
-        'columns': [' HOST', 'MIN ', 'AVG ', 'MAX ', 'STDEV', 'LOSS'],
-        'attrs': curses.A_STANDOUT
-    }]
+    header = [' HOST ', 'MIN ', 'AVG ', 'MAX ', 'STD ', 'LOSS ']
+    table = [{'columns': header, 'attrs': curses.A_STANDOUT}]
+
+    # Add sorting indicator
+    if isinstance(sort_key, int) and 0 < abs(sort_key) <= len(header):
+        indicator = '▲' if sort_key > 0 else '▼'
+        table[0]['columns'][abs(sort_key) - 1] += indicator
 
     # Add the hosts, their columns, and the appropriate curses attributes
     for host in sort_hosts(hosts, sort_key):

@@ -236,22 +236,22 @@ class TestLayout(unittest.TestCase):
         """Ensure accepted sort keys are between 0 and 6."""
         layout = cping.layouts.modern.Layout(cping.protocols.Ping())
 
-        keys = [ord(str(x)) for x in range(7)]
+        keys = [ord(str(x)) for x in range(8)]
         window = unittest.mock.MagicMock()
         window.getch = TestLayout.wrap_curses_getch(keys)
         window.getmaxyx = lambda: (24, 80)
+        get_table_sort_key = unittest.mock.MagicMock(return_value=1)
 
         old_get_table_sort_key = cping.layouts.modern.get_table_sort_key
-        cping.layouts.modern.get_table_sort_key = unittest.mock.MagicMock()
+        cping.layouts.modern.get_table_sort_key = get_table_sort_key
 
         try:
             layout.render(window)
-            calls = cping.layouts.modern.get_table_sort_key.call_args_list
         finally:
             cping.layouts.modern.get_table_sort_key = old_get_table_sort_key
 
-        # Sort key 7 is ignored
-        for call, sort_key in zip(calls, range(6)):
+        # 0 to 6 are accepted, 7 is ignored
+        for call, sort_key in zip(get_table_sort_key.call_args_list, range(7)):
             self.assertEqual(list(call)[0][0], sort_key)
 
     def test_render_function_start_stop(self):
@@ -381,7 +381,7 @@ class TestGetTable(unittest.TestCase):
         """Confirm the table starts with the header."""
         hosts = [cping.protocols.Ping()(str(x)) for x in range(3)]
         table = cping.layouts.modern.get_table(hosts)
-        header = ['HOST', 'MIN', 'AVG', 'MAX', 'STDEV', 'LOSS']
+        header = ['HOST', 'MIN', 'AVG', 'MAX', 'STD', 'LOSS']
 
         self.assertEqual(len(table), len(hosts) + 1)
         self.assertEqual(table[0]['line'].split(), header)
