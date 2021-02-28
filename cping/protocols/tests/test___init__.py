@@ -247,6 +247,14 @@ class TestHost(unittest.TestCase):
         with self.assertRaisesRegex(AttributeError, 'can.t set attribute'):
             host.protocol = None
 
+    def test_read_only_read_signal(self):
+        """Host's ready_signal attribute is read only."""
+        host = cping.protocols.Ping()('localhost')
+        self.assertTrue(isinstance(host.ready_signal, threading.Event))
+
+        with self.assertRaisesRegex(AttributeError, 'can.t set attribute'):
+            host.ready_signal = None
+
     def test_read_only_results(self):
         """Host's results attribute is read only."""
         host = cping.protocols.Ping()('localhost')
