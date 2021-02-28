@@ -140,9 +140,6 @@ class Layout(cping.layouts.Layout):
 
             button = window.getch()
 
-            # Flush input buffer to remove queued keys pressed during processing
-            curses.flushinp()
-
             if button == curses.KEY_UP:
                 selection = max(selection - 1, 0)
             elif button == curses.KEY_DOWN:
@@ -158,18 +155,21 @@ class Layout(cping.layouts.Layout):
                 # Start or stop the selected host (all if header selected)
                 if selection > 0:
                     if table[selection]['host'].is_running():
-                        table[selection]['host'].stop()
+                        table[selection]['host'].stop(block=True)
                     else:
                         table[selection]['host'].start()
                 elif any((host.is_running() for host in self.hosts)):
                     for host in self.hosts:
-                        host.stop()
+                        host.stop(block=True)
                 else:
                     interval = self.protocol.interval
                     cping.utils.stagger_start(self.hosts, interval)
             elif button in range(48, 48 + 7):
                 # Sorting: 48 is the '0' key, so this is effectively `range(7)`
                 sort_key = get_table_sort_key(button % 48, sort_key)
+
+            # Flush input buffer to remove queued keys pressed during processing
+            curses.flushinp()
 
 
 def get_host_columns(host):
