@@ -264,24 +264,30 @@ class TestHost(unittest.TestCase):
 
 class TestPing(unittest.TestCase):
     """cping.protocols.Ping tests."""
-    def test_get_timeout(self):
-        """Timeout should account for the test latency and burst mode."""
-        host = cping.protocols.Ping()('host')
-
-        # The latency is subtracted from the protocol interval
-        self.assertEqual(host.protocol.get_timeout(0.3, host), 0.7)
-
-        # No timeout when the ping failed (already spent the full interval)
-        self.assertEqual(host.protocol.get_timeout(-1, host), 0)
-
-        # No timeout when the burst mode is enabled
-        host.burst_mode.set()
-        self.assertEqual(host.protocol.get_timeout(0.3, host), 0)
-
     def test_ping_loop(self):
         """Ensure ping_loop raises NotImplementedError."""
         with self.assertRaises(NotImplementedError):
             cping.protocols.Ping().ping_loop(None)
+
+    def test_wait(self):
+        """Timeout should account for the test latency and burst mode."""
+        host = cping.protocols.Ping()('host')
+
+        # The latency is subtracted from the protocol interval
+        checkpoint = time.time()
+        host.protocol.wait(host, 0.9)
+        self.assertTrue(0.05 <= time.time() - checkpoint <= 0.15)
+
+        # No timeout when the ping failed (already spent the full interval)
+        checkpoint = time.time()
+        host.protocol.wait(host, -1)
+        self.assertLess(time.time() - checkpoint, 0.1)
+
+        # No timeout when the burst mode is enabled
+        checkpoint = time.time()
+        host.burst_mode.set()
+        host.protocol.wait(host, 0.5)
+        self.assertLess(time.time() - checkpoint, 0.1)
 
     def test_invalid_type_interval(self):
         """Create an instance of Ping with an invalid interval type."""

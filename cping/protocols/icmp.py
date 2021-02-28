@@ -71,7 +71,7 @@ class Ping(cping.protocols.Ping):
 
         session = Session(4 if host_info[0] == socket.AF_INET else 6)
 
-        while True:
+        while not host.stop_signal.is_set():
             request, reply = session.create_icmp_echo()
             receive_event = threading.Event()
             latency = -1
@@ -98,9 +98,8 @@ class Ping(cping.protocols.Ping):
 
             host.add_result(latency)
 
-            # Sleep until signaled to stop or the timeout expires
-            if host.stop_signal.wait(self.get_timeout(latency, host)):
-                break
+            # Block until signaled to continue
+            self.wait(host, latency)
 
 
 class Session():

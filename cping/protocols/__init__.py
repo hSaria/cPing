@@ -4,6 +4,8 @@ import statistics
 import threading
 import time
 
+import cping.utils
+
 # Lower bound on the number of results
 RESULTS_LENGTH_MINIMUM = 50
 
@@ -40,6 +42,11 @@ class Host:
         self._stop_signal = threading.Event()
         self._test_thread = None
 
+        self._ready_signal = cping.utils.create_shared_event(
+            self._burst_mode,
+            self._stop_signal,
+        )
+
     def __str__(self):
         return self._address
 
@@ -57,6 +64,12 @@ class Host:
     def protocol(self):
         """A reference to the Ping object the host is using."""
         return self._protocol
+
+    @property
+    def ready_signal(self):
+        """An instance of `threading.Event` to indicate that `burst_mode` or
+        `stop_signal` became set."""
+        return self._ready_signal
 
     @property
     def results(self):
@@ -235,21 +248,6 @@ class Ping:
 
         self._interval = value
 
-    def get_timeout(self, latency, host):
-        """Returns a float indicating the time to wait before the next ping based
-        on the previous result.
-
-        Args:
-            latency (float): The latency of the previous ping.
-            host (cping.protocols.Host): The test's host.
-        """
-        # No timeout if test failed or burst mode is enabled
-        if latency == -1 or host.burst_mode.is_set():
-            return 0
-
-        # Account for the latency of the previous test
-        return self.interval - latency
-
     def ping_loop(self, host):
         """A blocking call that will begin pinging the host and registering the
         results using `host.add_result`. An implementation must account for
@@ -262,16 +260,16 @@ class Ping:
         raise NotImplementedError('cping.protocols.Ping is a base class; it '
                                   'does not implement ping_loop')
 
+    def wait(self, host, latency):
+        """Returns a float indicating the time to wait before the next ping based
+        on the previous result.
 
-def stagger_start(hosts, interval):
-    """Start the hosts over the duration of an interval. For instance, three
-    hosts are staggered over an interval like so:
-    interval: |-------||-------||-------|
-    first:    |---1--->|---1--->|---1--->
-    second:      |---2--->|---2--->|---2--->
-    third:          |---3--->|---3--->|---3--->
-    """
-    stagger_interval = interval / len(hosts)
+        Args:
+            latency (float): The latency of the previous ping.
+        """
+        # No timeout if test failed or burst mode is enabled
+        if latency == -1 or host.burst_mode.is_set():
+            return
 
-    for index, host in enumerate(hosts):
-        host.start(delay=stagger_interval * index)
+        # Account for the latency of the previous test
+        host.ready_signal.wait(self.interval - latency)

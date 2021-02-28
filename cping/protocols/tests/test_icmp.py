@@ -24,8 +24,7 @@ class TestPing(unittest.TestCase):
     def test_host_not_responding(self):
         """Nothing is sent back."""
         host = cping.protocols.icmp.Ping(0.2)('1.2.3.4')
-        host.start()
-        host.stop(block=True)
+        cping.protocols.tests.ping_loop_once(host)
 
         self.assertEqual(len(host.results), 1)
         self.assertEqual(host.results[0]['latency'], -1)
@@ -33,8 +32,7 @@ class TestPing(unittest.TestCase):
     def test_host_responding_ipv4(self):
         """Host replying on IPv4."""
         host = cping.protocols.icmp.Ping()('127.0.0.1')
-        host.start()
-        host.stop(block=True)
+        cping.protocols.tests.ping_loop_once(host)
 
         self.assertEqual(len(host.results), 1)
         self.assertNotEqual(host.results[0]['latency'], -1)
@@ -42,8 +40,7 @@ class TestPing(unittest.TestCase):
     def test_host_responding_ipv6(self):
         """Host replying on IPv6."""
         host = cping.protocols.icmp.Ping()('::1')
-        host.start()
-        host.stop(block=True)
+        cping.protocols.tests.ping_loop_once(host)
 
         self.assertEqual(len(host.results), 1)
         self.assertNotEqual(host.results[0]['latency'], -1)

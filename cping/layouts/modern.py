@@ -134,6 +134,10 @@ class Layout(cping.layouts.Layout):
             table = get_table(self.hosts, sort_key)
             Layout.render_table(window, table, selection)
 
+            # Clear burst mode at avoid waiting on getch
+            for host in self.hosts:
+                host.burst_mode.clear()
+
             button = window.getch()
 
             # Flush input buffer to remove queued keys pressed during processing
@@ -166,10 +170,6 @@ class Layout(cping.layouts.Layout):
             elif button in range(48, 48 + 7):
                 # Sorting: 48 is the '0' key, so this is effectively `range(7)`
                 sort_key = get_table_sort_key(button % 48, sort_key)
-            else:
-                # Clear burst mode
-                for host in self.hosts:
-                    host.burst_mode.clear()
 
 
 def get_host_columns(host):

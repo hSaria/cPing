@@ -1,11 +1,49 @@
 """cping.utils tests"""
 import time
+import threading
 import unittest
 
 import cping.protocols
 import cping.utils
 
 # pylint: disable=protected-access
+
+
+class TestCreateSharedEvent(unittest.TestCase):
+    """cping.utils.create_stared_event tests."""
+    def test_set(self):
+        """Shared event should be set when any of the child events are set, and
+        cleared when all child events are cleared."""
+        events = [threading.Event() for _ in range(3)]
+        shared = cping.utils.create_shared_event(*events)
+
+        # No events set; all are cleared at the start
+        self.assertFalse(all((e.is_set() for e in events + [shared])))
+
+        # Setting an event; shared event set
+        events[0].set()
+        self.assertTrue(events[0].is_set())
+        self.assertFalse(events[1].is_set())
+        self.assertFalse(events[2].is_set())
+        self.assertTrue(shared.is_set())
+
+        # Setting another event; shared event set
+        events[1].set()
+        self.assertTrue(events[0].is_set())
+        self.assertTrue(events[1].is_set())
+        self.assertFalse(events[2].is_set())
+        self.assertTrue(shared.is_set())
+
+        # Clearing one event; shared event set
+        events[0].clear()
+        self.assertFalse(events[0].is_set())
+        self.assertTrue(events[1].is_set())
+        self.assertFalse(events[2].is_set())
+        self.assertTrue(shared.is_set())
+
+        # Clearing the other event; shared event cleared
+        events[1].clear()
+        self.assertFalse(all((e.is_set() for e in events + [shared])))
 
 
 class TestStaggerStart(unittest.TestCase):

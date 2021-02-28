@@ -50,7 +50,7 @@ class Ping(cping.protocols.Ping):
             host.status = 'Host resolution failed'
             return
 
-        while True:
+        while not host.stop_signal.is_set():
             latency = None
             error = False
 
@@ -76,6 +76,5 @@ class Ping(cping.protocols.Ping):
             host.add_result(latency, error)
             test_socket.close()
 
-            # Sleep until signaled to stop or the timeout expires
-            if host.stop_signal.wait(self.get_timeout(latency, host)):
-                break
+            # Block until signaled to continue
+            self.wait(host, latency)

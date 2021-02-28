@@ -54,8 +54,7 @@ class TestPing(unittest.TestCase):
     def test_host_closed(self):
         """TCP-RST is sent back."""
         host = cping.protocols.tcp.Ping(50001)('127.0.0.1')
-        host.start()
-        host.stop(block=True)
+        cping.protocols.tests.ping_loop_once(host)
 
         self.assertEqual(len(host.results), 1)
         self.assertNotEqual(host.results[0]['latency'], -1)
@@ -64,8 +63,7 @@ class TestPing(unittest.TestCase):
     def test_host_not_responding(self):
         """Nothing is sent back."""
         host = cping.protocols.tcp.Ping(50002, 0.2)('1.2.3.4')
-        host.start()
-        host.stop(block=True)
+        cping.protocols.tests.ping_loop_once(host)
 
         self.assertEqual(len(host.results), 1)
         self.assertEqual(host.results[0]['latency'], -1)
@@ -78,8 +76,7 @@ class TestPing(unittest.TestCase):
         server.listen()
 
         host = cping.protocols.tcp.Ping(50003)('127.0.0.1')
-        host.start()
-        host.stop(block=True)
+        cping.protocols.tests.ping_loop_once(host)
         server.close()
 
         self.assertEqual(len(host.results), 1)
