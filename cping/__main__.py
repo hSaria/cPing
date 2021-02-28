@@ -4,6 +4,7 @@ import sys
 
 import cping
 import cping.protocols
+import cping.utils
 
 INTERVAL_MINIMUM = 0.1
 
@@ -80,7 +81,7 @@ def main(args=None):
         for host in args.host:
             layout.add_host(host)
 
-        cping.protocols.stagger_start(layout.hosts, layout.protocol.interval)
+        cping.utils.stagger_start(layout.hosts, layout.protocol.interval)
         layout()
     except KeyboardInterrupt:
         pass

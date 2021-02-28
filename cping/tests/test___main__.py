@@ -1,4 +1,4 @@
-"""cping tests"""
+"""cping.__main__ tests"""
 import contextlib
 import io
 import signal
@@ -10,7 +10,7 @@ import unittest
 
 import cping
 import cping.__main__
-
+import cping.utils
 
 class TestMain(unittest.TestCase):
     """cping.__main__.main tests."""
@@ -43,14 +43,14 @@ class TestMain(unittest.TestCase):
         def patch(*_):
             raise KeyboardInterrupt()
 
-        old_stagger_start = cping.protocols.stagger_start
-        cping.protocols.stagger_start = patch
+        old_stagger_start = cping.utils.stagger_start
+        cping.utils.stagger_start = patch
 
         try:
             # KeyboardInterrupt shouldn't raise an exception or return an error
             cping.__main__.main(['localhost'])
         finally:
-            cping.protocols.stagger_start = old_stagger_start
+            cping.utils.stagger_start = old_stagger_start
 
     def test_ping_icmp(self):
         """Use ICMP as the Ping class."""

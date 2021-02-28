@@ -6,6 +6,7 @@ import sys
 
 import cping.layouts
 import cping.protocols
+import cping.utils
 
 COLUMN_DELIMITER = '  '
 COLUMN_WIDTH_MINIMUM = 6
@@ -161,7 +162,7 @@ class Layout(cping.layouts.Layout):
                         host.stop()
                 else:
                     interval = self.protocol.interval
-                    cping.protocols.stagger_start(self.hosts, interval)
+                    cping.utils.stagger_start(self.hosts, interval)
             elif button in range(48, 48 + 7):
                 # Sorting: 48 is the '0' key, so this is effectively `range(7)`
                 sort_key = get_table_sort_key(button % 48, sort_key)
