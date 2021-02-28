@@ -14,7 +14,7 @@ class Layout(cping.layouts.Layout):
             # Enable alternate screen buffer
             print('\x1b[?1049h', end='')
 
-            while any([host.is_running() for host in self.hosts]):
+            while any((host.is_running() for host in self.hosts)):
                 # Move to 1;1
                 print('\x1b[H', end='')
                 print(get_table(self.hosts), end='', flush=True)
