@@ -3,7 +3,6 @@ import argparse
 import sys
 
 import cping
-import cping.protocols
 import cping.utils
 
 INTERVAL_MINIMUM = 0.1
@@ -85,10 +84,6 @@ def main(args=None):
         layout()
     except KeyboardInterrupt:
         pass
-    finally:
-        if 'layout' in locals():
-            for host in layout.hosts:
-                host.stop()
 
 
 if __name__ == '__main__':

@@ -153,7 +153,7 @@ class Host:
         if not isinstance(error, bool):
             raise TypeError('error must be a boolean')
 
-            self._results.append({'latency': latency, 'error': error})
+        self._results.append({'latency': latency, 'error': error})
         self._cached_results_summary.cache_clear()
 
     def is_running(self):
@@ -178,8 +178,8 @@ class Host:
         if self._results.maxlen == new_length:
             return
 
-            # Create deque with the new length
-            self._results = collections.deque(self._results, maxlen=new_length)
+        # Create deque with the new length
+        self._results = collections.deque(self._results, maxlen=new_length)
 
     def start(self, delay=0):
         """Clears `self.status` and starts the ping loop.
@@ -201,7 +201,9 @@ class Host:
         self.stop_signal.clear()
 
         if not self.is_running():
+            # Daemonized to exit immediately on exit
             self._test_thread = threading.Thread(target=ping_loop_wrapper)
+            self._test_thread.daemon = True
             self._test_thread.start()
 
     def stop(self, block=False):
@@ -252,7 +254,8 @@ class Ping:
         """A blocking call that will begin pinging the host and registering the
         results using `host.add_result`. An implementation must account for
         changes in protocol attributes (e.g. interval) while the loop is running.
-        The loop should break when `host.stop_signal` is set.
+        The loop should break when `host.stop_signal` is set. This method should
+        expect to be stopped at any point during its execution.
 
         Args:
             host (cping.protocols.Host): The host instance to ping.
