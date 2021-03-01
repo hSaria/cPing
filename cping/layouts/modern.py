@@ -177,15 +177,17 @@ def get_host_columns(host):
         host (cping.protocols.Host): Host from which to get the details.
     """
     columns = [str(host)]
+    stat_format = '{:.2f}'
 
     for stat in ['min', 'avg', 'max', 'stdev', 'loss']:
-        if host.results_summary[stat] is not None:
-            if stat == 'loss':
-                columns.append('{:.0%} '.format(host.results_summary[stat]))
-            else:
-                columns.append('{:.2f}'.format(host.results_summary[stat]))
-        else:
+        if host.results_summary[stat] is None:
             columns.append('-  ')
+            continue
+
+        if stat == 'loss':
+            stat_format = '{:.0%} '
+
+        columns.append(stat_format.format(host.results_summary[stat]))
 
     return columns
 
@@ -203,23 +205,22 @@ def get_table(hosts, sort_key=0):
 
     # Add sorting indicator
     if isinstance(sort_key, int) and 0 < abs(sort_key) <= len(header):
-        indicator = '▲' if sort_key > 0 else '▼'
-        table[0]['columns'][abs(sort_key) - 1] += indicator
+        header[abs(sort_key) - 1] += '▲' if sort_key > 0 else '▼'
 
     # Add the hosts, their columns, and the appropriate curses attributes
     for host in sort_hosts(hosts, sort_key):
-        if host.is_running():
-            attributes = curses.A_NORMAL
-        else:
-            attributes = curses.A_UNDERLINE
-
-        table.append({
+        row = {
             'host': host,
             'columns': get_host_columns(host),
-            'attrs': attributes,
-        })
+            'attrs': curses.A_NORMAL,
+        }
 
-    # Calculate the the maximum width of each column among all rows
+        if not host.is_running():
+            row['attrs'] = curses.A_UNDERLINE
+
+        table.append(row)
+
+    # Calculate the maximum width of each column among all rows
     column_widths = [COLUMN_WIDTH_MINIMUM] * 6
 
     for column in range(6):

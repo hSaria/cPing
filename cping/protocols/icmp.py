@@ -42,25 +42,23 @@ class Ping(cping.protocols.Ping):
         icmp_sockets = [Ping.icmpv4_socket, Ping.icmpv6_socket]
 
         while True:
-            # Block until there is data to be read
-            for protocol_socket in select.select(icmp_sockets, [], [])[0]:
-                data = protocol_socket.recv(2048)
+            # Block until there is at least one socket ready to be read
+            protocol_socket = select.select(icmp_sockets, [], [])[0][0]
 
-                # Ignore checksum (IPv6 requires a pseudo-header that's too much
-                # work to calculate and is already calculated by the kernel) and
-                # identifier (Linux overwrites identifier, so a globally-unique
-                # sequence is used instead). Also, the IPv4 header is included
-                # in the data on macOS, so we have to extract the ICMP message.
-                data = b''.join([
-                    data[-(DATA_LENGTH + 8):-(DATA_LENGTH + 6)],
-                    (b'\x00' * 4),
-                    data[-(DATA_LENGTH + 2):],
-                ])
+            # Strip the ICMP reply as macOS includes the IPv4 header in data
+            data = protocol_socket.recv(2048)[-(DATA_LENGTH + 8):]
 
-                for expected, event in Ping.match_queue.copy():
-                    if data == expected:
-                        event.set()
-                        break
+            # Checksum (2 bytes) ignored because IPv6 requires a pseudo-header
+            # that's too much work to calculate and is already calculated by the
+            # kernel. Identifier (2 bytes) ignored because Linux overwrites it,
+            # so the globally-unique sequence is being used for tracking.
+            data = data[:2] + b'\x00\x00\x00\x00' + data[6:]
+
+            # Obtain copy to avoid list length being changed while iterating
+            for expected, event in Ping.match_queue.copy():
+                if data == expected:
+                    event.set()
+                    break
 
     def ping_loop(self, host):
         try:

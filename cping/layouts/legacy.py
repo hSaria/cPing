@@ -4,7 +4,7 @@ import time
 
 import cping.layouts
 
-HISTOGRAM_COUNT_MINIMUM = 5
+HISTOGRAM_LENGTH_MINIMUM = 5
 
 
 class Layout(cping.layouts.Layout):
@@ -47,21 +47,7 @@ def format_host(host, host_padding, line_width):
     else:
         line += '    -   '
 
-    # Output optimization by only including color markers when the color changes
-    last_color = None
-    histogram_count = max(line_width - len(line), HISTOGRAM_COUNT_MINIMUM)
-
-    for result in list(host.results)[-histogram_count:]:
-        if result['latency'] == -1:
-            line += get_color('red', last_color) + '.'
-            last_color = 'red'
-        else:
-            color = 'green' if not result['error'] else 'yellow'
-            line += get_color(color, last_color) + '!'
-            last_color = color
-
-    # Include a color reset at the end of the line
-    return line + get_color('reset')
+    return line + get_histogram(host, line_width - len(line))
 
 
 def get_color(color, last_color=None):
@@ -76,6 +62,26 @@ def get_color(color, last_color=None):
         }.get(color, '')
 
     return ''
+
+
+def get_histogram(host, length):
+    """Returns an ANSI-colored string representing the host's results."""
+    # Output optimization by only including color markers when the color changes
+    line = ''
+    length = max(length, HISTOGRAM_LENGTH_MINIMUM)
+    last_color = None
+
+    for result in list(host.results)[-length:]:
+        if result['latency'] == -1:
+            line += get_color('red', last_color) + '.'
+            last_color = 'red'
+        else:
+            color = 'green' if not result['error'] else 'yellow'
+            line += get_color(color, last_color) + '!'
+            last_color = color
+
+    # Include a color reset at the end of the line
+    return line + get_color('reset')
 
 
 def get_table(hosts, all_hosts=False):

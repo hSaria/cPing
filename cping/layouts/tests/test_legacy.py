@@ -55,14 +55,32 @@ class TestFormatHost(unittest.TestCase):
         cping.layouts.legacy.format_host(host, 4, 150)
         self.assertGreater(host.results.maxlen, old_length)
 
-    def test_results_histogram(self):
+    def test_statistics(self):
+        """The host's statistics are shown."""
+        # pylint: disable=no-member  # Linter bug
+        host = cping.protocols.Ping()('localhost')
+
+        for result in [-1, -1, 1, 2]:
+            host.add_result(result)
+
+        line = cping.layouts.legacy.format_host(host, 4, 80)
+        self.assertIn(' 1000.00', line)
+        self.assertIn(' 1500.00', line)
+        self.assertIn(' 2000.00', line)
+        self.assertIn(' 707', line)
+        self.assertIn(' 50%', line)
+
+
+class TestGetHistogram(unittest.TestCase):
+    """cping.layouts.legacy.get_histogram tests."""
+    def test_results(self):
         """Ensure the results are correctly represented."""
         host = cping.protocols.Ping()('localhost')
 
         for result in [-1, 0, -1, -1, 0]:
             host.add_result(result)
 
-        line = cping.layouts.legacy.format_host(host, 4, 80)
+        line = cping.layouts.legacy.get_histogram(host, 80)
         self.assertIn('.!..!', strip_colors(line))
 
 
