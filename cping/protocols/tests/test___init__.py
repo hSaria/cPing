@@ -5,7 +5,7 @@ import unittest
 
 import cping.protocols
 
-# pylint: disable=protected-access, too-many-public-methods
+# pylint: disable=protected-access
 
 
 class TestHost(unittest.TestCase):
@@ -18,22 +18,6 @@ class TestHost(unittest.TestCase):
 
         self.assertEqual(host.results[0], {'latency': 1, 'error': False})
         self.assertEqual(host.results[1], {'latency': 2, 'error': True})
-
-    def test_add_result_lock(self):
-        """Ensure add_result locks _results_lock."""
-        host = cping.protocols.Ping()('localhost')
-
-        # Adding a result requires locking
-        with host._results_lock:
-            thread = threading.Thread(target=host.add_result, args=(1, ))
-            thread.start()
-            time.sleep(0.1)
-
-            self.assertEqual(len(host.results), 0)
-
-        # Releasing the lock should allow the thread to change the length
-        thread.join()
-        self.assertEqual(len(host.results), 1)
 
     def test_add_result_invalid_type_latency(self):
         """Add a result with an invalid latency type."""
@@ -109,30 +93,6 @@ class TestHost(unittest.TestCase):
         for i in range(120):
             host.add_result(i)
 
-        self.assertEqual(len(host.results), 120)
-
-    def test_set_results_length_lock(self):
-        """Ensure set_results_length locks _results_lock."""
-        host = cping.protocols.Ping()('localhost')
-        host.set_results_length(150)
-
-        for i in range(150):
-            host.add_result(i)
-
-        host._results_lock.acquire()
-
-        # Setting the same length will not lock (no change is made)
-        host.set_results_length(150)
-
-        # Setting a different length requires locking
-        thread = threading.Thread(target=host.set_results_length, args=(120, ))
-        thread.start()
-        time.sleep(0.1)
-        self.assertEqual(len(host.results), 150)
-
-        # Release should allow the thread to change the length
-        host._results_lock.release()
-        thread.join()
         self.assertEqual(len(host.results), 120)
 
     def test_set_results_length_invalid_type_new_length(self):

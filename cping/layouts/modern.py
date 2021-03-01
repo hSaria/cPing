@@ -1,7 +1,6 @@
 """Curses-based interactive window."""
 import curses
 import math
-import re
 import sys
 
 import cping.layouts
@@ -10,7 +9,6 @@ import cping.utils
 
 COLUMN_DELIMITER = '  '
 COLUMN_WIDTH_MINIMUM = 6
-SPARKLINE_STABLE_STDEV = 5
 
 
 class Layout(cping.layouts.Layout):
@@ -51,7 +49,7 @@ class Layout(cping.layouts.Layout):
                 point = '!'
 
                 if sys.platform != 'win32':
-                    point = sparkline_point(
+                    point = cping.utils.sparkline_point(
                         result['latency'] * 1000,
                         host.results_summary['min'],
                         host.results_summary['max'],
@@ -79,8 +77,8 @@ class Layout(cping.layouts.Layout):
         page_count = math.ceil(len(table) / (lines - 1))
         page_number = (selection // (lines - 1)) + 1
 
-        footer = get_table_footer(page_count, page_number,
-                                  selection).ljust(columns)
+        footer = get_table_footer(page_count, page_number, selection)
+        footer = footer.ljust(columns)
 
         try:
             window.erase()
@@ -134,7 +132,7 @@ class Layout(cping.layouts.Layout):
             table = get_table(self.hosts, sort_key)
             Layout.render_table(window, table, selection)
 
-            # Clear burst mode at avoid waiting on getch
+            # Clear burst mode to avoid sticking while waiting on getch
             for host in self.hosts:
                 host.burst_mode.clear()
 
@@ -322,12 +320,6 @@ def host_results_sort_key(host, key):
     return value if value is not None else 10**6
 
 
-def natural_ordering_sort_key(string, _regex=re.compile(r'(\d+)')):
-    """Returns a list containing the `string`, but with the numbers converted
-    into integers. Meant to be used as a natural-sorting key."""
-    return [int(x) if x.isdigit() else x.lower() for x in _regex.split(string)]
-
-
 def sort_hosts(hosts, sort_key=0):
     """Returns `hosts`, sorted according to `sort_key`.
 
@@ -337,53 +329,17 @@ def sort_hosts(hosts, sort_key=0):
             at 1, the column numbers map to: host, min, avg, max, stdev, and
             loss.
     """
-    key = lambda host: 0
-    reverse = False
+    sort_keys = {
+        1: lambda host: cping.utils.natural_ordering_sort_key(str(host)),
+        2: lambda host: host_results_sort_key(host, 'min'),
+        3: lambda host: host_results_sort_key(host, 'avg'),
+        4: lambda host: host_results_sort_key(host, 'max'),
+        5: lambda host: host_results_sort_key(host, 'stdev'),
+        6: lambda host: host_results_sort_key(host, 'loss'),
+    }
 
-    if isinstance(sort_key, int) and sort_key != 0:
-        reverse = sort_key < 0
-
-        if abs(sort_key) == 1:
-            key = lambda host: natural_ordering_sort_key(str(host))
-        elif abs(sort_key) == 2:
-            key = lambda host: host_results_sort_key(host, 'min')
-        elif abs(sort_key) == 3:
-            key = lambda host: host_results_sort_key(host, 'avg')
-        elif abs(sort_key) == 4:
-            key = lambda host: host_results_sort_key(host, 'max')
-        elif abs(sort_key) == 5:
-            key = lambda host: host_results_sort_key(host, 'stdev')
-        elif abs(sort_key) == 6:
-            key = lambda host: host_results_sort_key(host, 'loss')
+    # Get the respective lambda sort key, defaulting to no sorting
+    key = sort_keys.get(abs(sort_key or 0), lambda host: 0)
+    reverse = isinstance(sort_key, int) and sort_key < 0
 
     return sorted(hosts, key=key, reverse=reverse)
-
-
-def sparkline_point(value, minimum, maximum, stdev=None):
-    """Returns one of `▁▂▃▄▅▆▇` to be used as part of a sparkline. If `stdev` is
-    less than SPARKLINE_STABLE_STDEV, `▁▂` are not used as it could incorrectly
-    indicate an unstable host.
-
-    Args:
-        value (float): the value to normalize
-        minimum (float): the minimum value in the data set
-        maximum (float): the maximum value in the data set
-        stdev (float): the standard deviation of the data set
-    """
-    if maximum == minimum:
-        # Avoid divide-by-zero when there's only one data point
-        normalized_value = 0
-    else:
-        # The value between 0 and 1 relative to the minimum and maximum
-        normalized_value = (value - minimum) / (maximum - minimum)
-
-    # The range of value falls under the stable delta range
-    if isinstance(stdev, float) and stdev < SPARKLINE_STABLE_STDEV:
-        # Distribute between 0.2 and 1.0 to avoid sporadic sparklines
-        normalized_value = ((1.0 - 0.2) * normalized_value) + 0.2
-
-    # Scale the value logarithmicly between 0 and 1
-    scaled_value = math.log(max((normalized_value * 10), 1), 10)
-
-    # Unicode blocks (they're in hex): https://w.wiki/zKh
-    return chr(0x2581 + round(scaled_value * 6))

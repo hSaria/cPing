@@ -1,5 +1,9 @@
 """Utility code (stub module)"""
+import math
+import re
 import threading
+
+SPARKLINE_STABLE_STDEV = 5
 
 
 def create_shared_event(*events):
@@ -20,12 +24,12 @@ def create_shared_event(*events):
 
     # Patch the event's set and clear methods to also update the shared event
     def patch_event(event):
-        # pylint: disable=protected-access
-        event._clear = event.clear
-        event._set = event.set
+        # Keep references to the event's original functions
+        original_clear = event.clear
+        original_set = event.set
 
-        patched_clear = lambda: (event._clear(), update())
-        patched_set = lambda: (event._set(), update())
+        patched_clear = lambda: (original_clear(), update())
+        patched_set = lambda: (original_set(), update())
 
         return patched_clear, patched_set
 
@@ -33,6 +37,42 @@ def create_shared_event(*events):
         event.clear, event.set = patch_event(event)
 
     return shared_event
+
+
+def natural_ordering_sort_key(string, _regex=re.compile(r'(\d+)')):
+    """Returns a list containing the `string`, but with the numbers converted
+    into integers. Meant to be used as a natural-sorting key."""
+    return [int(x) if x.isdigit() else x for x in _regex.split(string.lower())]
+
+
+def sparkline_point(value, minimum, maximum, stdev=None):
+    """Returns one of `▁▂▃▄▅▆▇` to be used as part of a sparkline. If `stdev` is
+    less than SPARKLINE_STABLE_STDEV, `▁▂` are not used as that might indicate
+    an unstable host.
+
+    Args:
+        value (float): the value to normalize
+        minimum (float): the minimum value in the data set
+        maximum (float): the maximum value in the data set
+        stdev (float): the standard deviation of the data set
+    """
+    if maximum == minimum:
+        # Avoid divide-by-zero when there's only one data point
+        normalized_value = 0
+    else:
+        # The value between 0 and 1 relative to the minimum and maximum
+        normalized_value = (value - minimum) / (maximum - minimum)
+
+    # The range of value falls under the stable delta range
+    if isinstance(stdev, float) and stdev < SPARKLINE_STABLE_STDEV:
+        # Distribute between 0.2 and 1.0 to avoid sporadic sparklines
+        normalized_value = ((1.0 - 0.2) * normalized_value) + 0.2
+
+    # Scale the value logarithmicly between 0 and 1
+    scaled_value = math.log(max((normalized_value * 10), 1), 10)
+
+    # Unicode blocks (they're in hex): https://w.wiki/zKh
+    return chr(0x2581 + round(scaled_value * 6))
 
 
 def stagger_start(hosts, interval):

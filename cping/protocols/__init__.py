@@ -36,7 +36,6 @@ class Host:
         self._burst_mode = threading.Event()
         self._protocol = protocol
         self._results = collections.deque(maxlen=RESULTS_LENGTH_MINIMUM)
-        self._results_lock = threading.Lock()
         self._results_summary = None
         self._status = None
         self._stop_signal = threading.Event()
@@ -90,8 +89,10 @@ class Host:
 
         Depending on the number of results, some may be `None`. The unit is ms.
         """
-        if self._results_summary is not None:
-            return self._results_summary
+        # Avoid race condition from `add_result` clearing the reference
+        cached_summary = self._results_summary
+        if cached_summary is not None:
+            return cached_summary
 
         summary = {
             'min': None,
@@ -150,7 +151,6 @@ class Host:
         if not isinstance(error, bool):
             raise TypeError('error must be a boolean')
 
-        with self._results_lock:
             self._results.append({'latency': latency, 'error': error})
             self._results_summary = None
 
@@ -176,8 +176,6 @@ class Host:
         if self._results.maxlen == new_length:
             return
 
-        # Lock to prevent result loss while the new deque replaces the old one
-        with self._results_lock:
             # Create deque with the new length
             self._results = collections.deque(self._results, maxlen=new_length)
 
@@ -185,7 +183,7 @@ class Host:
         """Clears `self.status` and starts the ping loop.
 
         Args:
-            * delay (float): Delay before the ping loop starts.
+            delay (float): Delay before the ping loop starts.
 
         Raises:
             TypeError: If `delay` is not a float.
@@ -208,7 +206,7 @@ class Host:
         """Signals the ping loop to stop.
 
         Args:
-            * block (bool): Whether to block until the ping loop stops.
+            block (bool): Whether to block until the ping loop stops.
         """
         self.stop_signal.set()
         if block:

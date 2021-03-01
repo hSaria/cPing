@@ -46,6 +46,32 @@ class TestCreateSharedEvent(unittest.TestCase):
         self.assertFalse(all((e.is_set() for e in events + [shared])))
 
 
+class TestSparklinePoint(unittest.TestCase):
+    """cping.utils.sparkline_point tests."""
+    base = 0x2581
+
+    def test_divide_by_zero(self):
+        """Return the lowest sparkline point when minimum and maximum are equal."""
+        point = cping.utils.sparkline_point(1, 1, 1)
+        self.assertEqual(point, chr(self.base))
+
+    def test_maximum(self):
+        """A value equal to maximum should return the highest sparkline point."""
+        point = cping.utils.sparkline_point(2, 1, 2)
+        self.assertEqual(point, chr(self.base + 6))
+
+    def test_minimum(self):
+        """A value equal to minimum should return the lowest sparkline point."""
+        point = cping.utils.sparkline_point(1, 1, 2)
+        self.assertEqual(point, chr(self.base))
+
+    def test_standard_deviation(self):
+        """If the standard deviation is less than the threshold, the lowest
+        sparkline point is raised."""
+        point = cping.utils.sparkline_point(1, 1, 2, 0.1)
+        self.assertGreater(ord(point), self.base)
+
+
 class TestStaggerStart(unittest.TestCase):
     """cping.utils.stagger_start tests."""
     def test_timing(self):
