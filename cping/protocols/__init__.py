@@ -3,6 +3,7 @@ import collections
 import statistics
 import threading
 import time
+from functools import lru_cache
 
 import cping.utils
 
@@ -36,7 +37,6 @@ class Host:
         self._burst_mode = threading.Event()
         self._protocol = protocol
         self._results = collections.deque(maxlen=RESULTS_LENGTH_MINIMUM)
-        self._results_summary = None
         self._status = None
         self._stop_signal = threading.Event()
         self._test_thread = None
@@ -45,6 +45,9 @@ class Host:
             self._burst_mode,
             self._stop_signal,
         )
+
+        # Create seperate cache for each host
+        self._cached_results_summary = lru_cache()(self._get_results_summary)
 
     def __str__(self):
         return self._address
@@ -89,33 +92,8 @@ class Host:
 
         Depending on the number of results, some may be `None`. The unit is ms.
         """
-        # Avoid race condition from `add_result` clearing the reference
-        cached_summary = self._results_summary
-        if cached_summary is not None:
-            return cached_summary
-
-        summary = {
-            'min': None,
-            'avg': None,
-            'max': None,
-            'stdev': None,
-            'loss': None,
-        }
-
-        # Remove failed pings and only get the delay value
-        results = [x['latency'] for x in self.results if x['latency'] != -1]
-
-        if results:
-            summary['min'] = min(results) * 1000
-            summary['avg'] = statistics.mean(results) * 1000
-            summary['max'] = max(results) * 1000
-            summary['loss'] = (1 - (len(results) / len(self.results)))
-
-            if len(results) > 1:
-                summary['stdev'] = statistics.stdev(results) * 1000
-
-        self._results_summary = summary
-        return summary
+        # Call the caching function to avoid calculating on every call
+        return self._cached_results_summary()
 
     @property
     def status(self):
@@ -133,6 +111,30 @@ class Host:
     def stop_signal(self):
         """Instance of `threading.Event` to signal to the test to stop."""
         return self._stop_signal
+
+    def _get_results_summary(self):
+        """Intermediate function to the `results_summary` property."""
+        summary = {
+            'min': None,
+            'avg': None,
+            'max': None,
+            'stdev': None,
+            'loss': None,
+        }
+
+        # Remove failed pings and only get the latency value
+        results = [x['latency'] for x in self.results if x['latency'] >= 0]
+
+        if results:
+            summary['min'] = min(results) * 1000
+            summary['avg'] = statistics.mean(results) * 1000
+            summary['max'] = max(results) * 1000
+            summary['loss'] = (1 - (len(results) / len(self.results)))
+
+            if len(results) > 1:
+                summary['stdev'] = statistics.stdev(results) * 1000
+
+        return summary
 
     def add_result(self, latency, error=False):
         """Adds a result (a float that represents the latency of a ping reply).
@@ -152,7 +154,7 @@ class Host:
             raise TypeError('error must be a boolean')
 
             self._results.append({'latency': latency, 'error': error})
-            self._results_summary = None
+        self._cached_results_summary.cache_clear()
 
     def is_running(self):
         """Returns `True` if the test is running. Otherwise, `False`."""
