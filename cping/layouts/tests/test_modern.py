@@ -415,7 +415,7 @@ class TestGetTableSortKey(unittest.TestCase):
         """Sorting key should cylce between asc->desc->none->asc->..."""
         self.assertEqual(cping.layouts.modern.get_table_sort_key(1, None), 1)
         self.assertEqual(cping.layouts.modern.get_table_sort_key(1, 1), -1)
-        self.assertEqual(cping.layouts.modern.get_table_sort_key(1, -1), None)
+        self.assertEqual(cping.layouts.modern.get_table_sort_key(1, -1), 0)
 
     def test_different_leads_to_ascending(self):
         """Different sorting key than current leads to ascending of the new key."""

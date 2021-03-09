@@ -177,7 +177,6 @@ def get_host_columns(host):
         host (cping.protocols.Host): Host from which to get the details.
     """
     columns = [str(host)]
-    stat_format = '{:.2f}'
 
     for stat in ['min', 'avg', 'max', 'stdev', 'loss']:
         if host.results_summary[stat] is None:
@@ -185,9 +184,9 @@ def get_host_columns(host):
             continue
 
         if stat == 'loss':
-            stat_format = '{:.0%} '
-
-        columns.append(stat_format.format(host.results_summary[stat]))
+            columns.append('{:.0%} '.format(host.results_summary[stat]))
+        else:
+            columns.append('{:.2f}'.format(host.results_summary[stat]))
 
     return columns
 
@@ -308,7 +307,7 @@ def get_table_sort_key(new, current):
     if isinstance(current, int) and abs(current) == new:
         if current < 0:
             # Currently descending; reset sorting
-            return None
+            return 0
         # Currently ascending; change to descending
         return -current
     # Currently None or some other key; change to ascending
