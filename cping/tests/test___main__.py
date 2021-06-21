@@ -12,6 +12,7 @@ import cping
 import cping.__main__
 import cping.utils
 
+
 class TestMain(unittest.TestCase):
     """cping.__main__.main tests."""
     def test_default_layout(self):
@@ -86,6 +87,7 @@ class TestMain(unittest.TestCase):
 
     def test_signal_interrupt(self):
         """Sending an interrupt signal should exit gracefully."""
+        # pylint: disable=consider-using-with
         process = subprocess.Popen(
             [sys.executable, '-m', 'cping', '-l', 'legacy', '127.0.0.1'],
             stdout=subprocess.DEVNULL,

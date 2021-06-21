@@ -264,11 +264,12 @@ class Ping:
                                   'does not implement ping_loop')
 
     def wait(self, host, latency):
-        """Returns a float indicating the time to wait before the next ping based
-        on the previous result.
+        """Blocks until `host` is ready for an event (i.e. burst mode is enabled
+        or shutdown has been signaled) or until it is time for the next ping.
 
         Args:
-            latency (float): The latency of the previous ping.
+            host (cping.protocols.Host): The host in question.
+            latency (float): Latency of the previous ping.
         """
         # No timeout if test failed or burst mode is enabled
         if latency == -1 or host.burst_mode.is_set():

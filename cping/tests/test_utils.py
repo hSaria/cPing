@@ -1,6 +1,6 @@
 """cping.utils tests"""
-import time
 import threading
+import time
 import unittest
 
 import cping.protocols
