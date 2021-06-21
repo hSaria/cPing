@@ -14,7 +14,7 @@ cPing concurrently checks if hosts are responding using ICMP echo or TCP SYN.
 
 ## Usage
 
-cPing does **not** require root privileges; you can run it as a normal user.
+cPing uses unprivileged sockets; no need for root privileges.
 
     cping host1 host2
 
