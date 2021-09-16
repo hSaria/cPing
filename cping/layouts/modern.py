@@ -184,9 +184,9 @@ def get_host_columns(host):
             continue
 
         if stat == 'loss':
-            columns.append('{:.0%} '.format(host.results_summary[stat]))
+            columns.append(f'{host.results_summary[stat]:.0%} ')
         else:
-            columns.append('{:.2f}'.format(host.results_summary[stat]))
+            columns.append(f'{host.results_summary[stat]:.2f}')
 
     return columns
 
@@ -259,7 +259,7 @@ def get_table_footer(page_count, page_number, selection):
         page_count (int): The total number of pages.
         page_number (int): Currently selected page.
     """
-    footer = ' Page {}/{} | '.format(page_number, page_count)
+    footer = f' Page {page_number}/{page_count} | '
 
     if selection == 0:
         footer += '(All): '

@@ -38,12 +38,12 @@ def format_host(host, host_padding, line_width):
 
     for stat in ['min', 'avg', 'max', 'stdev']:
         if host.results_summary[stat] is not None:
-            line += ' {:>7.2f}'.format(host.results_summary[stat])
+            line += f' {host.results_summary[stat]:>7.2f}'
         else:
             line += '     -  '
 
     if host.results_summary['loss'] is not None:
-        line += ' {:>5.0%}  '.format(host.results_summary['loss'])
+        line += f' {host.results_summary["loss"]:>5.0%}  '
     else:
         line += '    -   '
 
@@ -111,6 +111,6 @@ def get_table(hosts, all_hosts=False):
     # Not printing all hosts and some hosts overflowed
     if not all_hosts and len(hosts) > term_size.lines - 1:
         overflow = len(hosts) - (term_size.lines - 1)
-        table += '+{} more'.format(overflow)
+        table += f'+{overflow} more'
 
     return table

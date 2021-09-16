@@ -55,7 +55,7 @@ class TestHost(unittest.TestCase):
 
         # All stats are None
         for key, value in host.results_summary.items():
-            self.assertIsNone(value, msg='{} is not None'.format(key))
+            self.assertIsNone(value, msg=f'{key} is not None')
 
         host.add_result(0.8)
         self.assertEqual(host.results_summary['min'], 800)

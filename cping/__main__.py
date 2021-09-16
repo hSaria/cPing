@@ -53,7 +53,7 @@ def args_init(args=None):
     args = parser.parse_args(args=args)
 
     if args.interval < INTERVAL_MINIMUM:
-        parser.error('minimum interval is {}'.format(INTERVAL_MINIMUM))
+        parser.error(f'minimum interval is {INTERVAL_MINIMUM}')
 
     return args
 
