@@ -1,4 +1,4 @@
-"""ICMP echo ping."""
+'''ICMP echo ping.'''
 import array
 import random
 import select
@@ -15,10 +15,10 @@ SOCKET_TYPE = socket.SOCK_RAW if sys.platform == 'win32' else socket.SOCK_DGRAM
 
 
 class Ping(cping.protocols.Ping):
-    """ICMP echo ping. The possible results:
+    '''ICMP echo ping. The possible results:
         * latency=x, error=False: ICMP echo reply
         * latency=-1, error=False: timeout
-    """
+    '''
     icmpv4_socket = icmpv6_socket = None
     match_queue = []
 
@@ -37,8 +37,8 @@ class Ping(cping.protocols.Ping):
 
     @staticmethod
     def receiver():
-        """Monitors the ICMPv4 and ICMPv6 sockets for packets and attempt to
-        match them against `Ping.match_queue`."""
+        '''Monitors the ICMPv4 and ICMPv6 sockets for packets and attempt to
+        match them against `Ping.match_queue`.'''
         icmp_sockets = [Ping.icmpv4_socket, Ping.icmpv6_socket]
 
         while True:
@@ -101,23 +101,23 @@ class Ping(cping.protocols.Ping):
 
 
 class Session():
-    """A ping session to a host."""
+    '''A ping session to a host.'''
     sequence = -1
     sequence_lock = threading.Lock()
 
     def __init__(self, family):
-        """Constructor.
+        '''Constructor.
 
         Args:
             family (int): The IP family of the host. IPv4 if `4`, else IPv6.
-        """
+        '''
         self.family = 4 if family == 4 else 6
         self.identifier = random.randrange(1, 2**16)
 
     @staticmethod
     def get_checksum(data):
-        """Returns checksum of `data`. Not meant for ICMPv6 as that requires an IPv6
-        pseudo-header. ICMP checksum: www.ietf.org/rfc/rfc1071.html#section-4.1."""
+        '''Returns checksum of `data`. Not meant for ICMPv6 as that requires an IPv6
+        pseudo-header. ICMP checksum: www.ietf.org/rfc/rfc1071.html#section-4.1.'''
         # 0-pad data of odd length
         if len(data) % 2 == 1:
             data += b'\x00'
@@ -134,18 +134,18 @@ class Session():
 
     @staticmethod
     def generate_data(length, data=b':github.com/hSaria/cPing'):
-        """Returns string which repeats `data` until it reaches `length`."""
+        '''Returns string which repeats `data` until it reaches `length`.'''
         return (data * (length // len(data) + 1))[:length]
 
     @staticmethod
     def next_sequence():
-        """Returns the next sequence, incrementing it by 1."""
+        '''Returns the next sequence, incrementing it by 1.'''
         with Session.sequence_lock:
             Session.sequence += 1
             return Session.sequence
 
     def create_icmp_echo(self):
-        """Returns tuple of an ICMP echo request and its expected reply (bytes)."""
+        '''Returns tuple of an ICMP echo request and its expected reply (bytes).'''
         identifier = self.identifier & 0xffff
         sequence = Session.next_sequence() & 0xffff
         data = Session.generate_data(DATA_LENGTH)

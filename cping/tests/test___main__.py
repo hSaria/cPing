@@ -1,4 +1,4 @@
-"""cping.__main__ tests"""
+'''cping.__main__ tests'''
 import contextlib
 import io
 import signal
@@ -14,9 +14,9 @@ import cping.utils
 
 
 class TestMain(unittest.TestCase):
-    """cping.__main__.main tests."""
+    '''cping.__main__.main tests.'''
     def test_default_layout(self):
-        """Confirm that default layout is `modern`."""
+        '''Confirm that default layout is `modern`.'''
         trigger = threading.Event()
 
         old_call = cping.LayoutModern.__call__
@@ -29,7 +29,7 @@ class TestMain(unittest.TestCase):
             cping.LayoutModern.__call__ = old_call
 
     def test_interval_minimum_value(self):
-        """Ensure the minimum interval value is respected."""
+        '''Ensure the minimum interval value is respected.'''
         output = io.StringIO()
 
         with self.assertRaises(SystemExit):
@@ -39,7 +39,7 @@ class TestMain(unittest.TestCase):
         self.assertIn('minimum interval is', output.getvalue())
 
     def test_keyboard_interrupt(self):
-        """Confirm that a keyboard interrupt is handled."""
+        '''Confirm that a keyboard interrupt is handled.'''
         # pylint: disable=no-self-use
         def patch(*_):
             raise KeyboardInterrupt()
@@ -54,7 +54,7 @@ class TestMain(unittest.TestCase):
             cping.utils.stagger_start = old_stagger_start
 
     def test_ping_icmp(self):
-        """Use ICMP as the Ping class."""
+        '''Use ICMP as the Ping class.'''
         trigger = threading.Event()
 
         old_ping_loop = cping.PingICMP.ping_loop
@@ -70,7 +70,7 @@ class TestMain(unittest.TestCase):
             cping.PingICMP.ping_loop = old_ping_loop
 
     def test_ping_tcp(self):
-        """Use TCP as the Ping class."""
+        '''Use TCP as the Ping class.'''
         trigger = threading.Event()
 
         old_ping_loop = cping.PingTCP.ping_loop
@@ -86,7 +86,7 @@ class TestMain(unittest.TestCase):
             cping.PingTCP.ping_loop = old_ping_loop
 
     def test_signal_interrupt(self):
-        """Sending an interrupt signal should exit gracefully."""
+        '''Sending an interrupt signal should exit gracefully.'''
         # pylint: disable=consider-using-with
         process = subprocess.Popen(
             [sys.executable, '-m', 'cping', '-l', 'legacy', '127.0.0.1'],

@@ -1,4 +1,4 @@
-"""cping.protocols.icmp tests"""
+'''cping.protocols.icmp tests'''
 import unittest
 import unittest.mock
 
@@ -7,14 +7,14 @@ import cping.protocols.tests
 
 
 class TestPing(unittest.TestCase):
-    """cping.protocols.icmp.Ping tests."""
+    '''cping.protocols.icmp.Ping tests.'''
     def test_change_interval(self):
-        """Change the interval in the middle of the test."""
+        '''Change the interval in the middle of the test.'''
         protocol = cping.protocols.icmp.Ping()
         cping.protocols.tests.ping_change_interval(self, protocol)
 
     def test_failed_resolution(self):
-        """Failed resolution."""
+        '''Failed resolution.'''
         host = cping.protocols.icmp.Ping()('there.exampe.org')
 
         # ping_loop is blocking but will exit when the resolution fails
@@ -22,7 +22,7 @@ class TestPing(unittest.TestCase):
         self.assertEqual(host.status, 'Host resolution failed')
 
     def test_host_not_responding(self):
-        """Nothing is sent back."""
+        '''Nothing is sent back.'''
         host = cping.protocols.icmp.Ping(0.2)('1.2.3.4')
         cping.protocols.tests.ping_loop_once(host)
 
@@ -30,7 +30,7 @@ class TestPing(unittest.TestCase):
         self.assertEqual(host.results[0]['latency'], -1)
 
     def test_host_responding_ipv4(self):
-        """Host replying on IPv4."""
+        '''Host replying on IPv4.'''
         host = cping.protocols.icmp.Ping()('127.0.0.1')
         cping.protocols.tests.ping_loop_once(host)
 
@@ -38,7 +38,7 @@ class TestPing(unittest.TestCase):
         self.assertNotEqual(host.results[0]['latency'], -1)
 
     def test_host_responding_ipv6(self):
-        """Host replying on IPv6."""
+        '''Host replying on IPv6.'''
         host = cping.protocols.icmp.Ping()('::1')
         cping.protocols.tests.ping_loop_once(host)
 
@@ -46,7 +46,7 @@ class TestPing(unittest.TestCase):
         self.assertNotEqual(host.results[0]['latency'], -1)
 
     def test_os_error(self):
-        """Test OSError handling on `socket.sendto`."""
+        '''Test OSError handling on `socket.sendto`.'''
         def patch(*_):
             raise OSError('Some message')
 
@@ -59,14 +59,14 @@ class TestPing(unittest.TestCase):
 
 
 class TestSession(unittest.TestCase):
-    """cping.protocols.icmp.Session tests."""
+    '''cping.protocols.icmp.Session tests.'''
     def test_get_checksum_odd_sized(self):
-        """Ensure that odd-lengthed data is padded accordingly."""
+        '''Ensure that odd-lengthed data is padded accordingly.'''
         even = cping.protocols.icmp.Session.get_checksum(b'\x01\x02\x03\x00')
         odd = cping.protocols.icmp.Session.get_checksum(b'\x01\x02\x03')
         self.assertEqual(even, odd)
 
     def test_generate_data(self):
-        """Loop data until length."""
+        '''Loop data until length.'''
         data = cping.protocols.icmp.Session.generate_data(5, '123')
         self.assertEqual(data, '12312')

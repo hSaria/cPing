@@ -1,4 +1,4 @@
-"""Utility code (stub module)"""
+'''Utility code (stub module)'''
 import math
 import re
 import threading
@@ -7,12 +7,12 @@ SPARKLINE_STABLE_STDEV = 5
 
 
 def create_shared_event(*events):
-    """Returns an instance of `threading.Event` which will become set when any of
+    '''Returns an instance of `threading.Event` which will become set when any of
     the `events` are set (cleared when all are cleared).
 
     Args:
         *events (threading.Event): the events to monitor
-    """
+    '''
     shared_event = threading.Event()
 
     # Set shared_event if any of the events are set; cleared otherwise.
@@ -40,13 +40,13 @@ def create_shared_event(*events):
 
 
 def natural_ordering_sort_key(string, _regex=re.compile(r'(\d+)')):
-    """Returns a list containing the `string`, but with the numbers converted
-    into integers. Meant to be used as a natural-sorting key."""
+    '''Returns a list containing the `string`, but with the numbers converted
+    into integers. Meant to be used as a natural-sorting key.'''
     return [int(x) if x.isdigit() else x for x in _regex.split(string.lower())]
 
 
 def sparkline_point(value, minimum, maximum, stdev=None):
-    """Returns one of `▁▂▃▄▅▆▇` to be used as part of a sparkline. If `stdev` is
+    '''Returns one of `▁▂▃▄▅▆▇` to be used as part of a sparkline. If `stdev` is
     less than SPARKLINE_STABLE_STDEV, `▁▂` are not used as that might indicate
     an unstable host.
 
@@ -55,7 +55,7 @@ def sparkline_point(value, minimum, maximum, stdev=None):
         minimum (float): the minimum value in the data set
         maximum (float): the maximum value in the data set
         stdev (float): the standard deviation of the data set
-    """
+    '''
     if maximum == minimum:
         # Avoid divide-by-zero when there's only one data point
         normalized_value = 0
@@ -76,7 +76,7 @@ def sparkline_point(value, minimum, maximum, stdev=None):
 
 
 def stagger_start(hosts, interval):
-    """Start the hosts over the duration of an interval. For instance, three
+    '''Start the hosts over the duration of an interval. For instance, three
     hosts are staggered over an interval like so:
     interval: |-------||-------||-------|
     first:    |---1--->|---1--->|---1--->
@@ -86,7 +86,7 @@ def stagger_start(hosts, interval):
     Args:
         hosts (list): The list of hosts to start.
         interval (float): The duration over which the hosts are started.
-    """
+    '''
     stagger_interval = interval / len(hosts)
 
     for index, host in enumerate(hosts):

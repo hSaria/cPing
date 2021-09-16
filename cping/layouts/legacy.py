@@ -1,4 +1,4 @@
-"""A line-based, non-interactive layout. The "original"."""
+'''A line-based, non-interactive layout. The "original".'''
 import shutil
 import time
 
@@ -8,7 +8,7 @@ HISTOGRAM_LENGTH_MINIMUM = 5
 
 
 class Layout(cping.layouts.Layout):
-    """A line-based, non-interactive layout. The "original"."""
+    '''A line-based, non-interactive layout. The "original".'''
     def __call__(self):
         try:
             # Enable alternate screen buffer
@@ -28,7 +28,7 @@ class Layout(cping.layouts.Layout):
 
 
 def format_host(host, host_padding, line_width):
-    """Returns a line representing a summary of the host's results."""
+    '''Returns a line representing a summary of the host's results.'''
     # line_width - host - min (8) - avg (8) - max (8) - stdev (8) - loss (8)
     host.set_results_length(line_width - host_padding - 8 * 5)
     line = str(host).ljust(host_padding)
@@ -51,8 +51,8 @@ def format_host(host, host_padding, line_width):
 
 
 def get_color(color, last_color=None):
-    """Returns the ANSI code for `color`, taking in mind `last_color` to skip
-    unnecessary color codes. `color` can be green, red, yellow, and reset"""
+    '''Returns the ANSI code for `color`, taking in mind `last_color` to skip
+    unnecessary color codes. `color` can be green, red, yellow, and reset'''
     if color != last_color:
         return {
             'green': '\x1b[32m',
@@ -65,7 +65,7 @@ def get_color(color, last_color=None):
 
 
 def get_histogram(host, length):
-    """Returns an ANSI-colored string representing the host's results."""
+    '''Returns an ANSI-colored string representing the host's results.'''
     # Output optimization by only including color markers when the color changes
     line = ''
     length = max(length, HISTOGRAM_LENGTH_MINIMUM)
@@ -85,12 +85,12 @@ def get_histogram(host, length):
 
 
 def get_table(hosts, all_hosts=False):
-    """Returns a table (string) of the hosts' results.
+    '''Returns a table (string) of the hosts' results.
 
     Args:
         hosts (list): A list... of hosts... Yeah.
         all_hosts (bool): If `False`, table won't exceed screen's height.
-    """
+    '''
     table = ''
     term_size = shutil.get_terminal_size()
     host_padding = max([len(str(x)) for x in hosts]) + 1

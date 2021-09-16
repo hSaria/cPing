@@ -1,4 +1,4 @@
-"""cping.layouts.legacy tests"""
+'''cping.layouts.legacy tests'''
 import contextlib
 import io
 import re
@@ -10,10 +10,10 @@ import cping.protocols
 
 
 class TestLayout(unittest.TestCase):
-    """cping.layouts.legacy.Layout tests."""
+    '''cping.layouts.legacy.Layout tests.'''
     def test___call__(self):
-        """Ensure calling layout properly enters and exits the alternate buffer.
-        The layout should automatically exit when no hosts are running."""
+        '''Ensure calling layout properly enters and exits the alternate buffer.
+        The layout should automatically exit when no hosts are running.'''
         exit_signal = threading.Event()
 
         layout = cping.layouts.legacy.Layout(cping.protocols.Ping(0.5))
@@ -37,9 +37,9 @@ class TestLayout(unittest.TestCase):
 
 
 class TestFormatHost(unittest.TestCase):
-    """cping.layouts.legacy.format_host tests."""
+    '''cping.layouts.legacy.format_host tests.'''
     def test_host_status(self):
-        """The host's status, if set, should be shown."""
+        '''The host's status, if set, should be shown.'''
         host = cping.protocols.Ping()('localhost')
         host.status = 'Test status'
 
@@ -47,7 +47,7 @@ class TestFormatHost(unittest.TestCase):
         self.assertIn(host.status, line)
 
     def test_line_width(self):
-        """The line-width should update the host's results length."""
+        '''The line-width should update the host's results length.'''
         # pylint: disable=no-member  # Linter bug
         host = cping.protocols.Ping()('localhost')
         old_length = host.results.maxlen
@@ -56,7 +56,7 @@ class TestFormatHost(unittest.TestCase):
         self.assertGreater(host.results.maxlen, old_length)
 
     def test_statistics(self):
-        """The host's statistics are shown."""
+        '''The host's statistics are shown.'''
         # pylint: disable=no-member  # Linter bug
         host = cping.protocols.Ping()('localhost')
 
@@ -72,9 +72,9 @@ class TestFormatHost(unittest.TestCase):
 
 
 class TestGetHistogram(unittest.TestCase):
-    """cping.layouts.legacy.get_histogram tests."""
+    '''cping.layouts.legacy.get_histogram tests.'''
     def test_results(self):
-        """Ensure the results are correctly represented."""
+        '''Ensure the results are correctly represented.'''
         host = cping.protocols.Ping()('localhost')
 
         for result in [-1, 0, -1, -1, 0]:
@@ -85,24 +85,24 @@ class TestGetHistogram(unittest.TestCase):
 
 
 class TestGetColor(unittest.TestCase):
-    """cping.layouts.legacy.get_color tests."""
+    '''cping.layouts.legacy.get_color tests.'''
     def test_color(self):
-        """Get the ANSI code for a color"""
+        '''Get the ANSI code for a color'''
         self.assertEqual(cping.layouts.legacy.get_color('red'), '\x1b[31m')
 
     def test_last_color(self):
-        """Getting a color that is the last color should return an empty string."""
+        '''Getting a color that is the last color should return an empty string.'''
         self.assertEqual(cping.layouts.legacy.get_color('red', 'red'), '')
 
     def test_non_existent_color(self):
-        """A non-existent color should return an empty string"""
+        '''A non-existent color should return an empty string'''
         self.assertEqual(cping.layouts.legacy.get_color('hi'), '')
 
 
 class TestGetTable(unittest.TestCase):
-    """cping.layouts.legacy.get_table tests."""
+    '''cping.layouts.legacy.get_table tests.'''
     def test_overflow(self):
-        """Create a table with too many hosts to ensure they don't overflow."""
+        '''Create a table with too many hosts to ensure they don't overflow.'''
         hosts = [cping.protocols.Ping()(str(x)) for x in range(60)]
 
         table = cping.layouts.legacy.get_table(hosts)
@@ -113,5 +113,5 @@ class TestGetTable(unittest.TestCase):
 
 
 def strip_colors(data):
-    """Remove the ANSI foreground colors from the string `data`."""
+    '''Remove the ANSI foreground colors from the string `data`.'''
     return re.sub(r'\x1b\[\d*m', '', data)

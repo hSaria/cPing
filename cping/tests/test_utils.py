@@ -1,4 +1,4 @@
-"""cping.utils tests"""
+'''cping.utils tests'''
 import threading
 import time
 import unittest
@@ -10,10 +10,10 @@ import cping.utils
 
 
 class TestCreateSharedEvent(unittest.TestCase):
-    """cping.utils.create_stared_event tests."""
+    '''cping.utils.create_stared_event tests.'''
     def test_set(self):
-        """Shared event should be set when any of the child events are set, and
-        cleared when all child events are cleared."""
+        '''Shared event should be set when any of the child events are set, and
+        cleared when all child events are cleared.'''
         events = [threading.Event() for _ in range(3)]
         shared = cping.utils.create_shared_event(*events)
 
@@ -47,36 +47,36 @@ class TestCreateSharedEvent(unittest.TestCase):
 
 
 class TestSparklinePoint(unittest.TestCase):
-    """cping.utils.sparkline_point tests."""
+    '''cping.utils.sparkline_point tests.'''
     base = 0x2581
 
     def test_divide_by_zero(self):
-        """Return the lowest sparkline point when minimum and maximum are equal."""
+        '''Return the lowest sparkline point when minimum and maximum are equal.'''
         point = cping.utils.sparkline_point(1, 1, 1)
         self.assertEqual(point, chr(self.base))
 
     def test_maximum(self):
-        """A value equal to maximum should return the highest sparkline point."""
+        '''A value equal to maximum should return the highest sparkline point.'''
         point = cping.utils.sparkline_point(2, 1, 2)
         self.assertEqual(point, chr(self.base + 6))
 
     def test_minimum(self):
-        """A value equal to minimum should return the lowest sparkline point."""
+        '''A value equal to minimum should return the lowest sparkline point.'''
         point = cping.utils.sparkline_point(1, 1, 2)
         self.assertEqual(point, chr(self.base))
 
     def test_standard_deviation(self):
-        """If the standard deviation is less than the threshold, the lowest
-        sparkline point is raised."""
+        '''If the standard deviation is less than the threshold, the lowest
+        sparkline point is raised.'''
         point = cping.utils.sparkline_point(1, 1, 2, 0.1)
         self.assertGreater(ord(point), self.base)
 
 
 class TestStaggerStart(unittest.TestCase):
-    """cping.utils.stagger_start tests."""
+    '''cping.utils.stagger_start tests.'''
     def test_timing(self):
-        """Confirm three hosts are staggered over 0.6 seconds, with the first
-        starting immediately, and then 0.2 before each of the two that follow."""
+        '''Confirm three hosts are staggered over 0.6 seconds, with the first
+        starting immediately, and then 0.2 before each of the two that follow.'''
         ping = cping.protocols.Ping()
         ping.ping_loop = lambda _: startup_times.append(time.time())
 

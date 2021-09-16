@@ -1,4 +1,4 @@
-"""Curses-based interactive window."""
+'''Curses-based interactive window.'''
 import curses
 import math
 import sys
@@ -12,7 +12,7 @@ COLUMN_WIDTH_MINIMUM = 6
 
 
 class Layout(cping.layouts.Layout):
-    """Curses-based interactive window."""
+    '''Curses-based interactive window.'''
     colors = {}
 
     def __call__(self):
@@ -21,7 +21,7 @@ class Layout(cping.layouts.Layout):
 
     @staticmethod
     def initialize_colors():
-        """Populate the `Layout.colors` dictionaries with the attribute numbers."""
+        '''Populate the `Layout.colors` dictionaries with the attribute numbers.'''
         curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
         Layout.colors['green'] = curses.color_pair(1)
         curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
@@ -31,7 +31,7 @@ class Layout(cping.layouts.Layout):
 
     @staticmethod
     def render_sparkline(window, line, column, host, length):
-        """Render a sparkline at the requested position.
+        '''Render a sparkline at the requested position.
 
         Args:
             window (curses.window): Window to which the sparkline is rendered.
@@ -39,7 +39,7 @@ class Layout(cping.layouts.Layout):
             column (int): x coordinate of the start of the sparkline.
             host (cping.protocols.Host): Source of the sparkline's data.
             length (int): The maximum length of the sparkline.
-        """
+        '''
         for result in list(host.results)[-length:]:
             if result['latency'] == -1:
                 color = 'red'
@@ -64,13 +64,13 @@ class Layout(cping.layouts.Layout):
 
     @staticmethod
     def render_table(window, table, selection):
-        """Calls `window.addnstr` to render the table based on the selection.
+        '''Calls `window.addnstr` to render the table based on the selection.
 
         Args:
             window (curses.window): Window to which the table is rendered.
             table (list): The results table (i.e. `get_table`).
             selection (int): The index of the selected row.
-        """
+        '''
         lines, columns = window.getmaxyx()
 
         page = get_table_page(table, lines - 1, selection)
@@ -117,8 +117,8 @@ class Layout(cping.layouts.Layout):
             pass
 
     def render(self, window):
-        """Start rendering the layout. Blocking function meant to be called with
-        `curses.wrapper(self.render)`."""
+        '''Start rendering the layout. Blocking function meant to be called with
+        `curses.wrapper(self.render)`.'''
         # pylint: disable=too-many-branches
         Layout.initialize_colors()
 
@@ -171,11 +171,11 @@ class Layout(cping.layouts.Layout):
 
 
 def get_host_columns(host):
-    """Returns a list of strings containing host, min, avg, max, stdev, loss.
+    '''Returns a list of strings containing host, min, avg, max, stdev, loss.
 
     Args:
         host (cping.protocols.Host): Host from which to get the details.
-    """
+    '''
     columns = [str(host)]
 
     for stat in ['min', 'avg', 'max', 'stdev', 'loss']:
@@ -192,12 +192,12 @@ def get_host_columns(host):
 
 
 def get_table(hosts, sort_key=0):
-    """Returns a list of dictionaries, one for each row.
+    '''Returns a list of dictionaries, one for each row.
 
     Args:
         hosts (list): The hosts upon which the table is based.
         sort_key (int): Passed to `sort_hosts`.
-    """
+    '''
     # Table starts with the header
     header = [' HOST ', 'MIN ', 'AVG ', 'MAX ', 'STD ', 'LOSS ']
     table = [{'columns': header, 'attrs': curses.A_STANDOUT}]
@@ -253,12 +253,12 @@ def get_table(hosts, sort_key=0):
 
 
 def get_table_footer(page_count, page_number, selection):
-    """Returns a footer (string) for a table.
+    '''Returns a footer (string) for a table.
 
     Args:
         page_count (int): The total number of pages.
         page_number (int): Currently selected page.
-    """
+    '''
     footer = f' Page {page_number}/{page_count} | '
 
     if selection == 0:
@@ -277,13 +277,13 @@ def get_table_footer(page_count, page_number, selection):
 
 
 def get_table_page(table, size, selection):
-    """Returns a subset of the table based on the selection.
+    '''Returns a subset of the table based on the selection.
 
     Args:
         table (list): The list of rows to filter.
         size (int): Number of rows to return in the page.
         selection (int): The index of the item to be highlighted.
-    """
+    '''
     page = []
 
     for index, row in enumerate(table):
@@ -295,7 +295,7 @@ def get_table_page(table, size, selection):
 
 
 def get_table_sort_key(new, current):
-    """Returns the new sorting index depending on the current one. Positive
+    '''Returns the new sorting index depending on the current one. Positive
     implies ascending, negative is descending, and `0` means no sorting. The
     sorting will cycle between ascending, descending, and `0` if `new` is the
     same as `abs(current)`.
@@ -303,7 +303,7 @@ def get_table_sort_key(new, current):
     Args:
         new (int): the sorting key being requested.
         current (int): the sorting key currently being used.
-    """
+    '''
     if isinstance(current, int) and abs(current) == new:
         if current < 0:
             # Currently descending; reset sorting
@@ -315,20 +315,20 @@ def get_table_sort_key(new, current):
 
 
 def host_results_sort_key(host, key):
-    """Returns `host.results_summary.get(key)` if it's not None. Otherise 10**6."""
+    '''Returns `host.results_summary.get(key)` if it's not None. Otherise 10**6.'''
     value = host.results_summary.get(key)
     return value if value is not None else 10**6
 
 
 def sort_hosts(hosts, sort_key=0):
-    """Returns `hosts`, sorted according to `sort_key`.
+    '''Returns `hosts`, sorted according to `sort_key`.
 
     Args:
         hosts (list): The list of hosts to be sorted.
         sort_key (int): The column by which the table is sorted. Starting
             at 1, the column numbers map to: host, min, avg, max, stdev, and
             loss.
-    """
+    '''
     sort_keys = {
         1: lambda host: cping.utils.natural_ordering_sort_key(str(host)),
         2: lambda host: host_results_sort_key(host, 'min'),

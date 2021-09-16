@@ -1,9 +1,9 @@
-"""Generic code for cping.protocols tests."""
+'''Generic code for cping.protocols tests.'''
 import time
 
 
 def ping_change_interval(test_case, protocol):
-    """Change the interval in the middle of the test."""
+    '''Change the interval in the middle of the test.'''
     protocol.interval = 0.5
 
     host = protocol('1.2.3.4')
@@ -22,7 +22,7 @@ def ping_change_interval(test_case, protocol):
 
 
 def ping_loop_once(host):
-    """Start the host and run a single iteration."""
+    '''Start the host and run a single iteration.'''
     host.protocol.wait = lambda *_: host.stop_signal.set()
     host.start()
     host.stop_signal.wait()

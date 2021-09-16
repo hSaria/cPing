@@ -1,4 +1,4 @@
-"""TCP ping."""
+'''TCP ping.'''
 import socket
 import time
 
@@ -6,13 +6,13 @@ import cping.protocols
 
 
 class Ping(cping.protocols.Ping):
-    """TCP ping. The possible results:
+    '''TCP ping. The possible results:
         * latency=x, error=False: successful TCP handshake
         * latency=x, error=True: connection failure, like TCP-RST
         * latency=-1, error=False: timeout
-    """
+    '''
     def __init__(self, port, *args, **kwargs):
-        """Constructor.
+        '''Constructor.
 
         Args:
             port (int): TCP port to ping.
@@ -22,13 +22,13 @@ class Ping(cping.protocols.Ping):
         Raises:
             TypeError: If `port` is not a integer.
             ValueError: If `port` is not between 1 and 65535.
-        """
+        '''
         self.port = port
         super().__init__(*args, **kwargs)
 
     @property
     def port(self):
-        """TCP port to ping."""
+        '''TCP port to ping.'''
         return self._port
 
     @port.setter

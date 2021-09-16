@@ -1,4 +1,4 @@
-"""Generic code and base classes for ping protocols."""
+'''Generic code and base classes for ping protocols.'''
 import collections
 import statistics
 import threading
@@ -12,11 +12,11 @@ RESULTS_LENGTH_MINIMUM = 50
 
 
 class Host:
-    """A destination of pings of which it stores the results."""
+    '''A destination of pings of which it stores the results.'''
 
     # pylint: disable=too-many-instance-attributes
     def __init__(self, address, protocol):
-        """Constructor.
+        '''Constructor.
 
         Args:
             address (str): Ping destination.
@@ -25,7 +25,7 @@ class Host:
         Raises:
             TypeError: If `address` is not a string. If protocol is not an
                 instance of `cping.protocols.Ping`
-        """
+        '''
         if not isinstance(address, str):
             raise TypeError('address must be a string')
 
@@ -54,36 +54,36 @@ class Host:
 
     @property
     def address(self):
-        """Ping destination."""
+        '''Ping destination.'''
         return self._address
 
     @property
     def burst_mode(self):
-        """An instance of `threading.Event` to use burst mode when set."""
+        '''An instance of `threading.Event` to use burst mode when set.'''
         return self._burst_mode
 
     @property
     def protocol(self):
-        """A reference to the Ping object the host is using."""
+        '''A reference to the Ping object the host is using.'''
         return self._protocol
 
     @property
     def ready_signal(self):
-        """An instance of `threading.Event` to indicate that `burst_mode` or
-        `stop_signal` became set."""
+        '''An instance of `threading.Event` to indicate that `burst_mode` or
+        `stop_signal` became set.'''
         return self._ready_signal
 
     @property
     def results(self):
-        """A `collections.deque` containing results, each as a dictionary of
+        '''A `collections.deque` containing results, each as a dictionary of
             * latency (float): the latency of a ping probe (-1 for no reply)
             * error (bool): whether the ping reply was an error (e.g. TCP-RST)
-        """
+        '''
         return self._results.copy()
 
     @property
     def results_summary(self):
-        """Dictionary containing the following statistics (float):
+        '''Dictionary containing the following statistics (float):
             * Minimum (min)
             * Average (avg)
             * Maximum (max)
@@ -91,13 +91,13 @@ class Host:
             * Packet loss percentage (loss)
 
         Depending on the number of results, some may be `None`. The unit is ms.
-        """
+        '''
         # Call the caching function to avoid calculating on every call
         return self._cached_results_summary()
 
     @property
     def status(self):
-        """String describing the status of the host."""
+        '''String describing the status of the host.'''
         return self._status
 
     @status.setter
@@ -109,11 +109,11 @@ class Host:
 
     @property
     def stop_signal(self):
-        """Instance of `threading.Event` to signal to the test to stop."""
+        '''Instance of `threading.Event` to signal to the test to stop.'''
         return self._stop_signal
 
     def _get_results_summary(self):
-        """Intermediate function to the `results_summary` property."""
+        '''Intermediate function to the `results_summary` property.'''
         summary = {
             'min': None,
             'avg': None,
@@ -137,7 +137,7 @@ class Host:
         return summary
 
     def add_result(self, latency, error=False):
-        """Adds a result (a float that represents the latency of a ping reply).
+        '''Adds a result (a float that represents the latency of a ping reply).
 
         Args:
             latency (float): Latency between the ping request and its reply.
@@ -146,7 +146,7 @@ class Host:
 
         Raises:
             TypeError: If `latency` is not a float. If `error` is not a boolean.
-        """
+        '''
         if not isinstance(latency, (float, int)):
             raise TypeError('latency must be a float')
 
@@ -157,18 +157,18 @@ class Host:
         self._cached_results_summary.cache_clear()
 
     def is_running(self):
-        """Returns `True` if the test is running. Otherwise, `False`."""
+        '''Returns `True` if the test is running. Otherwise, `False`.'''
         return self._test_thread is not None and self._test_thread.is_alive()
 
     def set_results_length(self, new_length):
-        """Changes the results maximum length to be `new_length`.
+        '''Changes the results maximum length to be `new_length`.
 
         Args:
             new_length (int): The new maximum length of the results.
 
         Raises:
             TypeError: If `new_length` is not an integer.
-        """
+        '''
         if not isinstance(new_length, int):
             raise TypeError('new_length must be an integer')
 
@@ -182,14 +182,14 @@ class Host:
         self._results = collections.deque(self._results, maxlen=new_length)
 
     def start(self, delay=0):
-        """Clears `self.status` and starts the ping loop.
+        '''Clears `self.status` and starts the ping loop.
 
         Args:
             delay (float): Delay before the ping loop starts.
 
         Raises:
             TypeError: If `delay` is not a float.
-        """
+        '''
         if not isinstance(delay, (float, int)):
             raise TypeError('delay must be a float')
 
@@ -207,40 +207,40 @@ class Host:
             self._test_thread.start()
 
     def stop(self, block=False):
-        """Signals the ping loop to stop.
+        '''Signals the ping loop to stop.
 
         Args:
             block (bool): Whether to block until the ping loop stops.
-        """
+        '''
         self.stop_signal.set()
         if block:
             self._test_thread.join()
 
 
 class Ping:
-    """A ping base class. Subclasses must implement `ping_loop`."""
+    '''A ping base class. Subclasses must implement `ping_loop`.'''
     def __init__(self, interval=1):
-        """Constructor.
+        '''Constructor.
 
         Args:
             interval (float): Seconds, of a fraction thereof, between pings.
 
         Raises:
             TypeError: If `interval` is not a float.
-        """
+        '''
         self.interval = interval
 
     def __call__(self, address):
-        """Returns `cping.protocols.Host(address, self)`.
+        '''Returns `cping.protocols.Host(address, self)`.
 
         Args:
             address (str): Ping destination.
-        """
+        '''
         return Host(address, self)
 
     @property
     def interval(self):
-        """Seconds, of a fraction thereof, between pings."""
+        '''Seconds, of a fraction thereof, between pings.'''
         return self._interval
 
     @interval.setter
@@ -251,7 +251,7 @@ class Ping:
         self._interval = value
 
     def ping_loop(self, host):
-        """A blocking call that will begin pinging the host and registering the
+        '''A blocking call that will begin pinging the host and registering the
         results using `host.add_result`. An implementation must account for
         changes in protocol attributes (e.g. interval) while the loop is running.
         The loop should break when `host.stop_signal` is set. This method should
@@ -259,18 +259,18 @@ class Ping:
 
         Args:
             host (cping.protocols.Host): The host instance to ping.
-        """
+        '''
         raise NotImplementedError('cping.protocols.Ping is a base class; it '
                                   'does not implement ping_loop')
 
     def wait(self, host, latency):
-        """Blocks until `host` is ready for an event (i.e. burst mode is enabled
+        '''Blocks until `host` is ready for an event (i.e. burst mode is enabled
         or shutdown has been signaled) or until it is time for the next ping.
 
         Args:
             host (cping.protocols.Host): The host in question.
             latency (float): Latency of the previous ping.
-        """
+        '''
         # No timeout if test failed or burst mode is enabled
         if latency == -1 or host.burst_mode.is_set():
             return

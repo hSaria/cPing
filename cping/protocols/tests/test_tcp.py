@@ -1,4 +1,4 @@
-"""cping.protocols.tcp tests"""
+'''cping.protocols.tcp tests'''
 import socket
 import time
 import unittest
@@ -8,15 +8,15 @@ import cping.protocols.tests
 
 
 class TestPing(unittest.TestCase):
-    """cping.protocols.tcp.Ping tests."""
+    '''cping.protocols.tcp.Ping tests.'''
     def test_change_interval(self):
-        """Change the interval in the middle of the test."""
+        '''Change the interval in the middle of the test.'''
         protocol = cping.protocols.tcp.Ping(50000)
         cping.protocols.tests.ping_change_interval(self, protocol)
 
     def test_change_port(self):
-        """Change the port in the middle of the test. The first port is open,
-        the second one is closed (TCP-RST)."""
+        '''Change the port in the middle of the test. The first port is open,
+        the second one is closed (TCP-RST).'''
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.bind(('127.0.0.1', 50000))
         server.listen()
@@ -44,7 +44,7 @@ class TestPing(unittest.TestCase):
         self.assertTrue(host.results[1]['error'])
 
     def test_failed_resolution(self):
-        """Failed resolution."""
+        '''Failed resolution.'''
         host = cping.protocols.tcp.Ping(1)('there.exampe.org')
 
         # ping_loop is blocking but will exit when the resolution fails
@@ -52,7 +52,7 @@ class TestPing(unittest.TestCase):
         self.assertEqual(host.status, 'Host resolution failed')
 
     def test_host_closed(self):
-        """TCP-RST is sent back."""
+        '''TCP-RST is sent back.'''
         host = cping.protocols.tcp.Ping(50001)('127.0.0.1')
         cping.protocols.tests.ping_loop_once(host)
 
@@ -61,7 +61,7 @@ class TestPing(unittest.TestCase):
         self.assertTrue(host.results[0]['error'])
 
     def test_host_not_responding(self):
-        """Nothing is sent back."""
+        '''Nothing is sent back.'''
         host = cping.protocols.tcp.Ping(50002, 0.2)('1.2.3.4')
         cping.protocols.tests.ping_loop_once(host)
 
@@ -70,7 +70,7 @@ class TestPing(unittest.TestCase):
         self.assertFalse(host.results[0]['error'])
 
     def test_host_open(self):
-        """A successful TCP handshake."""
+        '''A successful TCP handshake.'''
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.bind(('127.0.0.1', 50003))
         server.listen()
@@ -84,12 +84,12 @@ class TestPing(unittest.TestCase):
         self.assertFalse(host.results[0]['error'])
 
     def test_invalid_type_port(self):
-        """TCP with an invalid port type."""
+        '''TCP with an invalid port type.'''
         with self.assertRaisesRegex(TypeError, 'port must be an integer'):
             cping.protocols.tcp.Ping('h')
 
     def test_invalid_value_port(self):
-        """TCP with an invalid port value."""
+        '''TCP with an invalid port value.'''
         regex = 'port outside of range 1-65535'
 
         with self.assertRaisesRegex(ValueError, regex):

@@ -1,4 +1,4 @@
-"""cping.layouts.modern tests"""
+'''cping.layouts.modern tests'''
 import curses
 import threading
 import unittest
@@ -11,11 +11,11 @@ import cping.protocols
 
 
 class TestLayout(unittest.TestCase):
-    """cping.layouts.modern.Layout tests."""
+    '''cping.layouts.modern.Layout tests.'''
     @staticmethod
     def wrap_curses_getch(keys):
-        """Returns a callable that will return `keys` one at a time per call.
-        Once the keys are exhausted, 'q' is returned."""
+        '''Returns a callable that will return `keys` one at a time per call.
+        Once the keys are exhausted, 'q' is returned.'''
         key_iterator = iter(keys)
 
         def getch():
@@ -31,7 +31,7 @@ class TestLayout(unittest.TestCase):
         curses.color_pair = lambda x: x
 
     def test___call__(self):
-        """Confirm `__call__` calls `render`."""
+        '''Confirm `__call__` calls `render`.'''
         layout = cping.layouts.modern.Layout(cping.protocols.Ping())
         layout.add_host('1')
 
@@ -43,7 +43,7 @@ class TestLayout(unittest.TestCase):
         self.assertTrue(trigger.is_set())
 
     def test_initialize_colors(self):
-        """Confirm `initialize_colors` populates `Layout.colors`."""
+        '''Confirm `initialize_colors` populates `Layout.colors`.'''
         colors = ['green', 'red', 'yellow']
 
         for color in colors:
@@ -55,7 +55,7 @@ class TestLayout(unittest.TestCase):
             self.assertIsNotNone(cping.layouts.modern.Layout.colors.get(color))
 
     def test_render_sparkline(self):
-        """`render_sparkline` should call `window.addstr`."""
+        '''`render_sparkline` should call `window.addstr`.'''
         host = cping.protocols.Ping()('localhost')
         host.add_result(-1)
         host.add_result(0.1)
@@ -85,8 +85,8 @@ class TestLayout(unittest.TestCase):
         self.assertEqual(list(window.mock_calls[2])[1][3], red)
 
     def test_render_table(self):
-        """`render_table` should call `window.erase`, `window.addnstr`, and
-        `window.refresh`."""
+        '''`render_table` should call `window.erase`, `window.addnstr`, and
+        `window.refresh`.'''
         host1 = cping.protocols.Ping()('host1')
         host2 = cping.protocols.Ping()('host2')
         table = cping.layouts.modern.get_table([host1, host2])
@@ -114,7 +114,7 @@ class TestLayout(unittest.TestCase):
         self.assertEqual(header_attributes & curses.A_BOLD, curses.A_BOLD)
 
     def test_render_table_curses_error_handling(self):
-        """`render_table` should handle exceptions of `curses.error`."""
+        '''`render_table` should handle exceptions of `curses.error`.'''
         def curses_error():
             raise curses.error()
 
@@ -128,8 +128,8 @@ class TestLayout(unittest.TestCase):
         self.assertEqual(len(window.mock_calls), 0)
 
     def test_render(self):
-        """Ensure `render` sets the timeout of the window and clears the input
-        buffers after `window.getch`."""
+        '''Ensure `render` sets the timeout of the window and clears the input
+        buffers after `window.getch`.'''
         def getch():
             getch_trigger.wait()
             return ord('q')
@@ -159,7 +159,7 @@ class TestLayout(unittest.TestCase):
         self.assertIn(unittest.mock.call.timeout(interval), window.mock_calls)
 
     def test_render_function_burst_mode(self):
-        """Enable/disable burst mode on a single host."""
+        '''Enable/disable burst mode on a single host.'''
         layout = cping.layouts.modern.Layout(cping.protocols.Ping())
         layout.add_host('host1')
         layout.add_host('host2')
@@ -181,7 +181,7 @@ class TestLayout(unittest.TestCase):
         self.assertTrue(layout.hosts[1].burst_mode.clear.called)
 
     def test_render_function_burst_mode_all(self):
-        """Enable/disable burst mode on all hosts."""
+        '''Enable/disable burst mode on all hosts.'''
         layout = cping.layouts.modern.Layout(cping.protocols.Ping())
         layout.add_host('host1')
         layout.add_host('host2')
@@ -210,7 +210,7 @@ class TestLayout(unittest.TestCase):
             self.assertTrue(host.burst_mode.clear.called)
 
     def test_render_function_change_selection(self):
-        """Ensure the selection changes but doesn't go out of the table bounds."""
+        '''Ensure the selection changes but doesn't go out of the table bounds.'''
         layout = cping.layouts.modern.Layout(cping.protocols.Ping())
         layout.add_host('1')
 
@@ -233,7 +233,7 @@ class TestLayout(unittest.TestCase):
             self.assertEqual(list(call)[0][2], selection)
 
     def test_render_function_sort(self):
-        """Ensure accepted sort keys are between 0 and 6."""
+        '''Ensure accepted sort keys are between 0 and 6.'''
         layout = cping.layouts.modern.Layout(cping.protocols.Ping())
 
         keys = [ord(str(x)) for x in range(8)]
@@ -255,7 +255,7 @@ class TestLayout(unittest.TestCase):
             self.assertEqual(list(call)[0][0], sort_key)
 
     def test_render_function_start_stop(self):
-        """Start/stop a single host."""
+        '''Start/stop a single host.'''
         layout = cping.layouts.modern.Layout(cping.protocols.Ping())
         layout.add_host('host1')
         layout.add_host('host2')
@@ -286,7 +286,7 @@ class TestLayout(unittest.TestCase):
         self.assertFalse(layout.hosts[1].stop.called)
 
     def test_render_function_start_stop_all(self):
-        """Start/stop all hosts."""
+        '''Start/stop all hosts.'''
         layout = cping.layouts.modern.Layout(cping.protocols.Ping())
         layout.add_host('host1')
         layout.add_host('host2')
@@ -317,9 +317,9 @@ class TestLayout(unittest.TestCase):
 
 
 class TestGetHostColumns(unittest.TestCase):
-    """cping.layouts.modern.get_host_columns tests."""
+    '''cping.layouts.modern.get_host_columns tests.'''
     def test_no_results(self):
-        """A host with no results should return place-holders in the stats."""
+        '''A host with no results should return place-holders in the stats.'''
         host = cping.protocols.Ping()('hi')
 
         columns = cping.layouts.modern.get_host_columns(host)
@@ -328,7 +328,7 @@ class TestGetHostColumns(unittest.TestCase):
         self.assertEqual(columns, expected)
 
     def test_results(self):
-        """Stats should have 2 decimal places, or a percentage for `loss`."""
+        '''Stats should have 2 decimal places, or a percentage for `loss`.'''
         host = cping.protocols.Ping()('hi')
         host.add_result(-1)
         host.add_result(0.1)
@@ -342,9 +342,9 @@ class TestGetHostColumns(unittest.TestCase):
 
 
 class TestGetTablePage(unittest.TestCase):
-    """cping.layouts.modern.get_table_page tests."""
+    '''cping.layouts.modern.get_table_page tests.'''
     def test_single_page(self):
-        """A page size that shows the entire table."""
+        '''A page size that shows the entire table.'''
         table = list(range(10))
         size = 10
         selection = 5
@@ -353,7 +353,7 @@ class TestGetTablePage(unittest.TestCase):
         self.assertEqual(page, table)
 
     def test_multiple_page(self):
-        """A size smaller than the table length should paginate."""
+        '''A size smaller than the table length should paginate.'''
         table = list(range(10))
         size = 3
         selection = 5
@@ -363,9 +363,9 @@ class TestGetTablePage(unittest.TestCase):
 
 
 class TestGetTable(unittest.TestCase):
-    """cping.layouts.modern.get_table tests."""
+    '''cping.layouts.modern.get_table tests.'''
     def test_column_width(self):
-        """The columns should all have equal lengths among the rows."""
+        '''The columns should all have equal lengths among the rows.'''
         hosts = [cping.protocols.Ping()(str(x)) for x in range(3)]
         table = cping.layouts.modern.get_table(hosts)
 
@@ -378,7 +378,7 @@ class TestGetTable(unittest.TestCase):
                 self.assertEqual(len(row['columns'][index]), column_width)
 
     def test_header(self):
-        """Confirm the table starts with the header."""
+        '''Confirm the table starts with the header.'''
         hosts = [cping.protocols.Ping()(str(x)) for x in range(3)]
         table = cping.layouts.modern.get_table(hosts)
         header = ['HOST', 'MIN', 'AVG', 'MAX', 'STD', 'LOSS']
@@ -387,7 +387,7 @@ class TestGetTable(unittest.TestCase):
         self.assertEqual(table[0]['line'].split(), header)
 
     def test_host_running(self):
-        """A running host should have different attributes than a stopped one."""
+        '''A running host should have different attributes than a stopped one.'''
         host1 = cping.protocols.Ping()('1')
         host2 = cping.protocols.Ping()('2')
 
@@ -401,7 +401,7 @@ class TestGetTable(unittest.TestCase):
         self.assertNotEqual(table[1]['attrs'], table[2]['attrs'])
 
     def test_host_status(self):
-        """Host status should be included in the table."""
+        '''Host status should be included in the table.'''
         host = cping.protocols.Ping()('1')
         host.status = 'Some status'
         table = cping.layouts.modern.get_table([host])
@@ -410,21 +410,21 @@ class TestGetTable(unittest.TestCase):
 
 
 class TestGetTableSortKey(unittest.TestCase):
-    """cping.layouts.modern.get_table_sort_key tests."""
+    '''cping.layouts.modern.get_table_sort_key tests.'''
     def test_cycle(self):
-        """Sorting key should cylce between asc->desc->none->asc->..."""
+        '''Sorting key should cylce between asc->desc->none->asc->...'''
         self.assertEqual(cping.layouts.modern.get_table_sort_key(1, None), 1)
         self.assertEqual(cping.layouts.modern.get_table_sort_key(1, 1), -1)
         self.assertEqual(cping.layouts.modern.get_table_sort_key(1, -1), 0)
 
     def test_different_leads_to_ascending(self):
-        """Different sorting key than current leads to ascending of the new key."""
+        '''Different sorting key than current leads to ascending of the new key.'''
         self.assertEqual(cping.layouts.modern.get_table_sort_key(2, 1), 2)
         self.assertEqual(cping.layouts.modern.get_table_sort_key(2, -1), 2)
 
 
 class TestSortHosts(unittest.TestCase):
-    """cping.layouts.modern.sort_hosts tests."""
+    '''cping.layouts.modern.sort_hosts tests.'''
     def setUp(self):
         # min=1000, avg=2000, max=3000, stdev=1000, loss=0.0
         self.host1 = cping.protocols.Ping()('host1')
@@ -446,7 +446,7 @@ class TestSortHosts(unittest.TestCase):
         self.host3.add_result(-1)
 
     def test_no_results(self):
-        """Sorting with a host that has no results."""
+        '''Sorting with a host that has no results.'''
         empty_host = cping.protocols.Ping()('host3')
         hosts = [self.host1, empty_host, self.host2]
 
@@ -457,7 +457,7 @@ class TestSortHosts(unittest.TestCase):
         self.assertEqual(sorted_hosts, [empty_host, self.host2, self.host1])
 
     def test_no_sorting(self):
-        """Sorting key 0, or an invalid key, will not change the order."""
+        '''Sorting key 0, or an invalid key, will not change the order.'''
         hosts = [self.host3, self.host1, self.host2]
 
         sorted_hosts = cping.layouts.modern.sort_hosts(hosts, 0)
@@ -470,7 +470,7 @@ class TestSortHosts(unittest.TestCase):
         self.assertEqual(sorted_hosts, [self.host3, self.host1, self.host2])
 
     def test_sorting_host(self):
-        """Sorting key 1 will sort by str(host)."""
+        '''Sorting key 1 will sort by str(host).'''
         hosts = [self.host3, self.host1, self.host2]
 
         sorted_hosts = cping.layouts.modern.sort_hosts(hosts, 1)
@@ -480,7 +480,7 @@ class TestSortHosts(unittest.TestCase):
         self.assertEqual(sorted_hosts, [self.host2, self.host3, self.host1])
 
     def test_sorting_min(self):
-        """Sorting key 2 will sort by the minimum statistic."""
+        '''Sorting key 2 will sort by the minimum statistic.'''
         hosts = [self.host1, self.host2, self.host3]
 
         sorted_hosts = cping.layouts.modern.sort_hosts(hosts, 2)
@@ -490,7 +490,7 @@ class TestSortHosts(unittest.TestCase):
         self.assertEqual(sorted_hosts, [self.host2, self.host1, self.host3])
 
     def test_sorting_max(self):
-        """Sorting key 3 will sort by the maximum statistic."""
+        '''Sorting key 3 will sort by the maximum statistic.'''
         hosts = [self.host1, self.host2, self.host3]
 
         sorted_hosts = cping.layouts.modern.sort_hosts(hosts, 3)
@@ -500,7 +500,7 @@ class TestSortHosts(unittest.TestCase):
         self.assertEqual(sorted_hosts, [self.host2, self.host1, self.host3])
 
     def test_sorting_avg(self):
-        """Sorting key 4 will sort by the average statistic."""
+        '''Sorting key 4 will sort by the average statistic.'''
         hosts = [self.host1, self.host2, self.host3]
 
         sorted_hosts = cping.layouts.modern.sort_hosts(hosts, 4)
@@ -510,7 +510,7 @@ class TestSortHosts(unittest.TestCase):
         self.assertEqual(sorted_hosts, [self.host2, self.host1, self.host3])
 
     def test_sorting_stdev(self):
-        """Sorting key 5 will sort by the standard deviation statistic."""
+        '''Sorting key 5 will sort by the standard deviation statistic.'''
         hosts = [self.host3, self.host1, self.host2]
 
         sorted_hosts = cping.layouts.modern.sort_hosts(hosts, 5)
@@ -520,7 +520,7 @@ class TestSortHosts(unittest.TestCase):
         self.assertEqual(sorted_hosts, [self.host1, self.host2, self.host3])
 
     def test_sorting_loss(self):
-        """Sorting key 6 will sort by the packet loss statistic."""
+        '''Sorting key 6 will sort by the packet loss statistic.'''
         hosts = [self.host3, self.host1, self.host2]
 
         sorted_hosts = cping.layouts.modern.sort_hosts(hosts, 6)

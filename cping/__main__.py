@@ -1,4 +1,4 @@
-"""Command line script."""
+'''Command line script.'''
 import argparse
 import sys
 
@@ -9,11 +9,11 @@ INTERVAL_MINIMUM = 0.1
 
 
 def args_init(args=None):
-    """Returns the parsed arguments (an instance of argparse.Namespace).
+    '''Returns the parsed arguments (an instance of argparse.Namespace).
 
     Args:
         args (list): A list of program arguments, Defaults to sys.argv.
-    """
+    '''
     formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=30)
     parser = argparse.ArgumentParser(formatter_class=formatter)
 
@@ -59,11 +59,11 @@ def args_init(args=None):
 
 
 def main(args=None):
-    """Command line utility entry point.
+    '''Command line utility entry point.
 
     Args:
         args (list): A list of program arguments. Defaults to sys.argv.
-    """
+    '''
     args = args_init(args)
 
     try:

@@ -1,4 +1,4 @@
-"""cping.layouts tests"""
+'''cping.layouts tests'''
 import unittest
 
 import cping.layouts
@@ -8,21 +8,21 @@ import cping.protocols
 
 
 class TestLayout(unittest.TestCase):
-    """cping.layouts.Layout tests."""
+    '''cping.layouts.Layout tests.'''
     def test_add_host(self):
-        """Add a host."""
+        '''Add a host.'''
         layout = cping.layouts.Layout(cping.protocols.Ping())
         self.assertIn(layout.add_host('localhost'), layout.hosts)
 
     def test_add_host_invalid_type_address(self):
-        """Add a host with an invalid address type."""
+        '''Add a host with an invalid address type.'''
         layout = cping.layouts.Layout(cping.protocols.Ping())
 
         with self.assertRaisesRegex(TypeError, 'address must be a string'):
             layout.add_host(None)
 
     def test_remove_host(self):
-        """Add a host."""
+        '''Add a host.'''
         layout = cping.layouts.Layout(cping.protocols.Ping())
         host = layout.add_host('localhost')
 
@@ -32,7 +32,7 @@ class TestLayout(unittest.TestCase):
         self.assertNotIn(host, layout.hosts)
 
     def test_remove_host_invalid_value_host(self):
-        """Attempt to remove a non-existent host."""
+        '''Attempt to remove a non-existent host.'''
         ping = cping.protocols.Ping()
         layout = cping.layouts.Layout(ping)
         host = ping('127.0.0.1')
@@ -41,14 +41,14 @@ class TestLayout(unittest.TestCase):
             layout.remove_host(host)
 
     def test_invalid_type_protocol(self):
-        """Create an instance of Layout with an invalid protocol type."""
+        '''Create an instance of Layout with an invalid protocol type.'''
         regex = 'protocol must be an instance of cping.protocols.Ping'
 
         with self.assertRaisesRegex(TypeError, regex):
             cping.layouts.Layout(None)
 
     def test_read_only_hosts(self):
-        """Layout's hosts attribute is read only."""
+        '''Layout's hosts attribute is read only.'''
         layout = cping.layouts.Layout(cping.protocols.Ping())
 
         # Confirm a copy is returned
@@ -58,7 +58,7 @@ class TestLayout(unittest.TestCase):
             layout.hosts = None
 
     def test_read_only_protocol(self):
-        """Layout's protocol attribute is read only."""
+        '''Layout's protocol attribute is read only.'''
         ping = cping.protocols.Ping()
         layout = cping.layouts.Layout(ping)
         self.assertIs(layout.protocol, ping)
@@ -67,6 +67,6 @@ class TestLayout(unittest.TestCase):
             layout.protocol = None
 
     def test___call__(self):
-        """Ensure __call__ raises NotImplementedError."""
+        '''Ensure __call__ raises NotImplementedError.'''
         with self.assertRaises(NotImplementedError):
             cping.layouts.Layout(cping.protocols.Ping())()
