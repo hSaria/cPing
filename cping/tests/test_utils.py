@@ -46,6 +46,19 @@ class TestCreateSharedEvent(unittest.TestCase):
         self.assertFalse(all((e.is_set() for e in events + [shared])))
 
 
+class TestGenerateData(unittest.TestCase):
+    '''cping.utils.generate_data tests.'''
+    def test_length_gt_data(self):
+        '''Length requested is greater than the data's length.'''
+        data = cping.utils.generate_data(5, '123')
+        self.assertEqual(data, '12312')
+
+    def test_length_lt_data(self):
+        '''Length requested is less than the data's length.'''
+        data = cping.utils.generate_data(2, '123')
+        self.assertEqual(data, '12')
+
+
 class TestSparklinePoint(unittest.TestCase):
     '''cping.utils.sparkline_point tests.'''
     base = 0x2581

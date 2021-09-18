@@ -65,8 +65,3 @@ class TestSession(unittest.TestCase):
         even = cping.protocols.icmp.Session.get_checksum(b'\x01\x02\x03\x00')
         odd = cping.protocols.icmp.Session.get_checksum(b'\x01\x02\x03')
         self.assertEqual(even, odd)
-
-    def test_generate_data(self):
-        '''Loop data until length.'''
-        data = cping.protocols.icmp.Session.generate_data(5, '123')
-        self.assertEqual(data, '12312')

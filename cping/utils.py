@@ -3,6 +3,7 @@ import math
 import re
 import threading
 
+DATA_LENGTH = 24
 SPARKLINE_STABLE_STDEV = 5
 
 
@@ -37,6 +38,11 @@ def create_shared_event(*events):
         event.clear, event.set = patch_event(event)
 
     return shared_event
+
+
+def generate_data(length=DATA_LENGTH, data=b':github.com/hSaria/cPing'):
+    '''Returns string which repeats `data` until it reaches `length`.'''
+    return (data * (length // len(data) + 1))[:length]
 
 
 def natural_ordering_sort_key(string, _regex=re.compile(r'(\d+)')):

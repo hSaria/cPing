@@ -9,8 +9,8 @@ import threading
 import time
 
 import cping.protocols
+import cping.utils
 
-DATA_LENGTH = 24
 SOCKET_TYPE = socket.SOCK_RAW if sys.platform == 'win32' else socket.SOCK_DGRAM
 
 
@@ -46,7 +46,7 @@ class Ping(cping.protocols.Ping):
             protocol_socket = select.select(icmp_sockets, [], [])[0][0]
 
             # Strip the ICMP reply as macOS includes the IPv4 header in data
-            data = protocol_socket.recv(2048)[-(DATA_LENGTH + 8):]
+            data = protocol_socket.recv(2048)[-(cping.utils.DATA_LENGTH + 8):]
 
             # Checksum (2 bytes) ignored because IPv6 requires a pseudo-header
             # that's too much work to calculate and is already calculated by the
@@ -133,11 +133,6 @@ class Session():
         return struct.pack('!H', socket.htons(~checksum & 0xffff))
 
     @staticmethod
-    def generate_data(length, data=b':github.com/hSaria/cPing'):
-        '''Returns string which repeats `data` until it reaches `length`.'''
-        return (data * (length // len(data) + 1))[:length]
-
-    @staticmethod
     def next_sequence():
         '''Returns the next sequence, incrementing it by 1.'''
         with Session.sequence_lock:
@@ -148,7 +143,7 @@ class Session():
         '''Returns tuple of an ICMP echo request and its expected reply (bytes).'''
         identifier = self.identifier & 0xffff
         sequence = Session.next_sequence() & 0xffff
-        data = Session.generate_data(DATA_LENGTH)
+        data = cping.utils.generate_data()
 
         # ICMP type field differs between ICMPv4 and ICMPv6
         request_type, reply_type = (8, 0) if self.family == 4 else (128, 129)
