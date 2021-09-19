@@ -29,12 +29,11 @@ def args_init(args=None):
                         help='ping interval (default: %(default)s)',
                         default=1)
 
-    # Suppress the layout option on Windows as it's currently limited to modern
-    layout_help = argparse.SUPPRESS
+    layout_help = 'display format. choices: %(choices)s (default: %(default)s)'
 
-    if sys.platform != 'win32':
-        layout_help = ('display format. choices: %(choices)s '
-                       '(default: %(default)s)')
+    # Suppress the layout option on Windows as it's currently limited to modern
+    if sys.platform == 'win32':
+        layout_help = argparse.SUPPRESS
 
     parser.add_argument('-l',
                         '--layout',

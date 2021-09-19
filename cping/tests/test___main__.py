@@ -7,6 +7,7 @@ import sys
 import threading
 import time
 import unittest
+import unittest.mock
 
 import cping
 import cping.__main__
@@ -27,6 +28,26 @@ class TestMain(unittest.TestCase):
             self.assertTrue(trigger.is_set())
         finally:
             cping.LayoutModern.__call__ = old_call
+
+    def test_help_layout(self):
+        '''Layout should not be present in the help when ran on Windows.'''
+        with unittest.mock.patch('sys.platform', 'darwin'):
+            output = io.StringIO()
+
+            with self.assertRaises(SystemExit):
+                with contextlib.redirect_stdout(output):
+                    cping.__main__.main(['-h'])
+
+            self.assertIn('--layout', output.getvalue())
+
+        with unittest.mock.patch('sys.platform', 'win32'):
+            output = io.StringIO()
+
+            with self.assertRaises(SystemExit):
+                with contextlib.redirect_stdout(output):
+                    cping.__main__.main(['-h'])
+
+            self.assertNotIn('--layout', output.getvalue())
 
     def test_interval_minimum_value(self):
         '''Ensure the minimum interval value is respected.'''
