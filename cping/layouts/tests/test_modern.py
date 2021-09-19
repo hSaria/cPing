@@ -217,20 +217,15 @@ class TestLayout(unittest.TestCase):
         keys = [curses.KEY_DOWN, curses.KEY_DOWN, curses.KEY_UP, curses.KEY_UP]
         window = unittest.mock.MagicMock()
         window.getch = TestLayout.wrap_curses_getch(keys)
+        function = 'cping.layouts.modern.Layout.render_table'
 
-        old_render_table = cping.layouts.modern.Layout.render_table
-        cping.layouts.modern.Layout.render_table = unittest.mock.MagicMock()
-
-        try:
+        with unittest.mock.patch(function) as mock:
             layout.render(window)
-            calls = cping.layouts.modern.Layout.render_table.call_args_list
-        finally:
-            cping.layouts.modern.Layout.render_table = old_render_table
 
-        # Startup table render (selection at 0). Key down twice, but selection
-        # at 1; reached bottom. Key up twice, but selection at 0; reached top
-        for call, selection in zip(calls, [0, 1, 1, 0, 0]):
-            self.assertEqual(list(call)[0][2], selection)
+            # Startup table render (selection at 0). Key down twice, selection
+            # at 1; reached bottom. Key up twice, selection at 0; reached top
+            for call, selection in zip(mock.call_args_list, [0, 1, 1, 0, 0]):
+                self.assertEqual(list(call)[0][2], selection)
 
     def test_render_function_sort(self):
         '''Ensure accepted sort keys are between 0 and 6.'''
@@ -240,19 +235,17 @@ class TestLayout(unittest.TestCase):
         window = unittest.mock.MagicMock()
         window.getch = TestLayout.wrap_curses_getch(keys)
         window.getmaxyx = lambda: (24, 80)
-        get_table_sort_key = unittest.mock.MagicMock(return_value=1)
+        function = 'cping.layouts.modern.get_table_sort_key'
 
-        old_get_table_sort_key = cping.layouts.modern.get_table_sort_key
-        cping.layouts.modern.get_table_sort_key = get_table_sort_key
-
-        try:
+        with unittest.mock.patch(function) as mock:
+            mock.return_value = 1
             layout.render(window)
-        finally:
-            cping.layouts.modern.get_table_sort_key = old_get_table_sort_key
 
-        # 0 to 6 are accepted, 7 is ignored
-        for call, sort_key in zip(get_table_sort_key.call_args_list, range(7)):
-            self.assertEqual(list(call)[0][0], sort_key)
+            # 0 to 6 are accepted, 7 is ignored
+            self.assertEqual(len(mock.call_args_list), 7)
+
+            for call, sort_key in zip(mock.call_args_list, range(7)):
+                self.assertEqual(list(call)[0][0], sort_key)
 
     def test_render_function_start_stop(self):
         '''Start/stop a single host.'''
