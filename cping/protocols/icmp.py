@@ -100,7 +100,7 @@ class Ping(cping.protocols.Ping):
             self.wait(host, latency)
 
 
-class Session():
+class Session:
     '''A ping session to a host.'''
     sequence = -1
     sequence_lock = threading.Lock()
@@ -136,20 +136,19 @@ class Session():
     def next_sequence():
         '''Returns the next sequence, incrementing it by 1.'''
         with Session.sequence_lock:
-            Session.sequence += 1
+            Session.sequence = Session.sequence + 1 & 0xffff
             return Session.sequence
 
     def create_icmp_echo(self):
         '''Returns tuple of an ICMP echo request and its expected reply (bytes).'''
-        identifier = self.identifier & 0xffff
-        sequence = Session.next_sequence() & 0xffff
+        sequence = Session.next_sequence()
         data = cping.utils.generate_data()
 
         # ICMP type field differs between ICMPv4 and ICMPv6
         request_type, reply_type = (8, 0) if self.family == 4 else (128, 129)
 
         # Checksum is calculated with the checksum in the header set to 0
-        request = struct.pack('!BBHHH', request_type, 0, 0, identifier,
+        request = struct.pack('!BBHHH', request_type, 0, 0, self.identifier,
                               sequence) + data
         request = request[:2] + Session.get_checksum(request) + request[4:]
 

@@ -51,30 +51,28 @@ class Ping(cping.protocols.Ping):
             return
 
         while not host.stop_signal.is_set():
+            # Update the port in the host_info in case it was changed
+            location = host_info[4][:1] + (self.port, ) + host_info[4][2:]
             latency = None
             error = False
 
-            test_socket = socket.socket(host_info[0], host_info[1])
-            test_socket.settimeout(self.interval)
+            with socket.socket(host_info[0], host_info[1]) as test_socket:
+                checkpoint = time.perf_counter()
 
-            # Update the port in the host_info in case it was changed
-            location = host_info[4][:1] + (self.port, ) + host_info[4][2:]
-            checkpoint = time.perf_counter()
+                try:
+                    test_socket.settimeout(self.interval)
+                    test_socket.connect(location)
+                except ConnectionError:
+                    # Got a response but it was an error (e.g. TCP-RST)
+                    error = True
+                except OSError:
+                    # OS errors, like 'Host is down' or socket.timeout
+                    latency = -1
 
-            try:
-                test_socket.connect(location)
-            except ConnectionError:
-                # Got a response but it was an error (e.g. TCP-RST)
-                error = True
-            except OSError:
-                # OS errors, like 'Host is down' or socket.timeout
-                latency = -1
-
-            if latency is None:
-                latency = time.perf_counter() - checkpoint
+                if latency is None:
+                    latency = time.perf_counter() - checkpoint
 
             host.add_result(latency, error)
-            test_socket.close()
 
             # Block until signaled to continue
             self.wait(host, latency)

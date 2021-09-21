@@ -26,8 +26,8 @@ def args_init(args=None):
                         '--interval',
                         metavar='sec',
                         type=float,
-                        help='ping interval (default: %(default)s)',
-                        default=1)
+                        default=1,
+                        help='ping interval (default: %(default)s)')
 
     layout_help = 'display format. choices: %(choices)s (default: %(default)s)'
 
@@ -39,9 +39,9 @@ def args_init(args=None):
                         '--layout',
                         metavar='name',
                         type=str.lower,
-                        help=layout_help,
                         choices=['legacy', 'modern'],
-                        default='modern')
+                        default='modern',
+                        help=layout_help)
 
     parser.add_argument('-p',
                         '--port',
