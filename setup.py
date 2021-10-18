@@ -1,7 +1,5 @@
 from setuptools import find_packages, setup
 
-REQUIRES_PYTHON = '>=3.6.0'
-
 with open('README.md', 'r') as f:
     long_description = f.read()
 
@@ -23,7 +21,7 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     packages=find_packages(),
-    python_requires=REQUIRES_PYTHON,
+    python_requires='>=3.6.0',
     url='https://github.com/hSaria/cPing',
     version='0.1.5-dev',
 )
