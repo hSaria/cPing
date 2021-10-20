@@ -243,8 +243,8 @@ class TestPing(unittest.TestCase):
 
         # The latency is subtracted from the protocol interval
         checkpoint = time.time()
-        host.protocol.wait(host, 0.9)
-        self.assertTrue(0.05 <= time.time() - checkpoint <= 0.15)
+        host.protocol.wait(host, 0.5)
+        self.assertTrue(0.4 <= time.time() - checkpoint <= 0.6)
 
         # No timeout when the ping failed (already spent the full interval)
         checkpoint = time.time()
