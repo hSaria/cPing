@@ -9,7 +9,8 @@ jobs:
     strategy:
       matrix:
         os:
-          - macos-latest
+          # Disabled because GitHub uses the original iMac for their CI
+          # - macos-latest
           - ubuntu-latest
         python-version:
           - '3.6'
