@@ -18,7 +18,6 @@ def args_init(args=None):
     parser = argparse.ArgumentParser(formatter_class=formatter)
 
     parser.add_argument('host',
-                        type=str,
                         nargs='+',
                         help='one or more hosts to ping')
 

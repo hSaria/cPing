@@ -15,9 +15,8 @@ class Layout(cping.layouts.Layout):
             print('\x1b[?1049h', end='')
 
             while any((host.is_running() for host in self.hosts)):
-                # Move to 1;1
-                print('\x1b[H', end='')
-                print(get_table(self.hosts), end='', flush=True)
+                # Move to top left, then print table
+                print(f'\x1b[H{get_table(self.hosts)}', end='', flush=True)
                 time.sleep(self.protocol.interval)
         finally:
             # Disable alternate screen buffer
@@ -110,7 +109,6 @@ def get_table(hosts, all_hosts=False):
 
     # Not printing all hosts and some hosts overflowed
     if not all_hosts and len(hosts) > term_size.lines - 1:
-        overflow = len(hosts) - (term_size.lines - 1)
-        table += f'+{overflow} more'
+        table += f'+{len(hosts) - (term_size.lines - 1)} more'
 
     return table
