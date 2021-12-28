@@ -1,6 +1,6 @@
 # cPing
 
-[![Build status](https://img.shields.io/github/workflow/status/hSaria/cPing/CI/master)](https://github.com/hSaria/cPing/actions?query=workflow%3ACI)
+[![Build status](https://img.shields.io/github/workflow/status/hSaria/cPing/CI/main)](https://github.com/hSaria/cPing/actions?query=workflow%3ACI)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/github/hSaria/cPing)](https://lgtm.com/projects/g/hSaria/cPing/context:python)
 [![Coverage status](https://coveralls.io/repos/github/hSaria/cPing/badge.svg)](https://coveralls.io/github/hSaria/cPing)
 [![Downloads](https://static.pepy.tech/personalized-badge/cping?period=total&units=international_system&left_color=grey&right_color=brightgreen&left_text=downloads)](https://pepy.tech/project/cping)
@@ -18,7 +18,7 @@ cPing uses unprivileged sockets; no need for root privileges.
 
     cping host1 host2
 
-![alt text](https://github.com/hSaria/cPing/raw/master/.github/example_1.png "Example output")
+![alt text](https://github.com/hSaria/cPing/raw/main/.github/example_1.png "Example output")
 
 > Tip: When you launch cPing, look at the footer; it's got some useful actions.
 
