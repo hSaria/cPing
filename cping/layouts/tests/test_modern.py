@@ -1,4 +1,5 @@
 '''cping.layouts.modern tests'''
+# pylint: disable=not-an-iterable,unsubscriptable-object
 import curses
 import threading
 import unittest
