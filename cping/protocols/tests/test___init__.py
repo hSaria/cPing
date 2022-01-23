@@ -10,6 +10,7 @@ import cping.protocols
 
 class TestHost(unittest.TestCase):
     '''cping.protocols.Host tests.'''
+
     def test_add_result(self):
         '''Add a result.'''
         host = cping.protocols.Ping()('localhost')
@@ -102,6 +103,7 @@ class TestHost(unittest.TestCase):
 
     def test_start(self):
         '''Start host with a dummy ping_loop.'''
+
         def dummy_ping_loop(host):
             time.sleep(0.1)
             host.stop_signal.set()
@@ -143,6 +145,7 @@ class TestHost(unittest.TestCase):
     def test_stop(self):
         '''Ensure stop sets stop_signal and, if `block=True`, waits until
         ping_loop exits.'''
+
         def dummy_ping_loop(host):
             host.stop_signal.wait()
             time.sleep(0.1)
@@ -232,6 +235,7 @@ class TestHost(unittest.TestCase):
 
 class TestPing(unittest.TestCase):
     '''cping.protocols.Ping tests.'''
+
     def test_ping_loop(self):
         '''Ensure ping_loop raises NotImplementedError.'''
         with self.assertRaises(NotImplementedError):

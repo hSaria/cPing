@@ -4,6 +4,7 @@ import cping.protocols
 
 class Layout:
     '''A layout base class. Subclasses must implement `__call__`.'''
+
     def __init__(self, protocol):
         '''Constructor.
 

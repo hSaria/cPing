@@ -9,6 +9,7 @@ import cping.protocols
 
 class TestLayout(unittest.TestCase):
     '''cping.layouts.Layout tests.'''
+
     def test_add_host(self):
         '''Add a host.'''
         layout = cping.layouts.Layout(cping.protocols.Ping())

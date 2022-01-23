@@ -11,6 +11,7 @@ class Ping(cping.protocols.Ping):
         * latency=x, error=True: connection failure, like TCP-RST
         * latency=-1, error=False: timeout
     '''
+
     def __init__(self, port, *args, **kwargs):
         '''Constructor.
 

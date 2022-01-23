@@ -219,6 +219,7 @@ class Host:
 
 class Ping:
     '''A ping base class. Subclasses must implement `ping_loop`.'''
+
     def __init__(self, interval=1):
         '''Constructor.
 

@@ -9,6 +9,7 @@ HISTOGRAM_LENGTH_MINIMUM = 5
 
 class Layout(cping.layouts.Layout):
     '''A line-based, non-interactive layout. The "original".'''
+
     def __call__(self):
         try:
             # Enable alternate screen buffer

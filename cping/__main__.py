@@ -17,9 +17,7 @@ def args_init(args=None):
     formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=30)
     parser = argparse.ArgumentParser(formatter_class=formatter)
 
-    parser.add_argument('host',
-                        nargs='+',
-                        help='one or more hosts to ping')
+    parser.add_argument('host', nargs='+', help='one or more hosts to ping')
 
     parser.add_argument('-i',
                         '--interval',

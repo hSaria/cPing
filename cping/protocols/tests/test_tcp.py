@@ -9,6 +9,7 @@ import cping.protocols.tests
 
 class TestPing(unittest.TestCase):
     '''cping.protocols.tcp.Ping tests.'''
+
     def test_change_interval(self):
         '''Change the interval in the middle of the test.'''
         protocol = cping.protocols.tcp.Ping(50000)

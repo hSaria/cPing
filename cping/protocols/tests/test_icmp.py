@@ -8,6 +8,7 @@ import cping.protocols.tests
 
 class TestPing(unittest.TestCase):
     '''cping.protocols.icmp.Ping tests.'''
+
     def test_change_interval(self):
         '''Change the interval in the middle of the test.'''
         protocol = cping.protocols.icmp.Ping()
@@ -47,6 +48,7 @@ class TestPing(unittest.TestCase):
 
     def test_os_error(self):
         '''Test OSError handling on `socket.sendto`.'''
+
         def patch(*_):
             raise OSError('Some message')
 
@@ -60,6 +62,7 @@ class TestPing(unittest.TestCase):
 
 class TestSession(unittest.TestCase):
     '''cping.protocols.icmp.Session tests.'''
+
     def test_get_checksum_odd_sized(self):
         '''Ensure that odd-lengthed data is padded accordingly.'''
         even = cping.protocols.icmp.Session.get_checksum(b'\x01\x02\x03\x00')

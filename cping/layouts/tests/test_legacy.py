@@ -11,6 +11,7 @@ import cping.protocols
 
 class TestLayout(unittest.TestCase):
     '''cping.layouts.legacy.Layout tests.'''
+
     def test___call__(self):
         '''Ensure calling layout properly enters and exits the alternate buffer.
         The layout should automatically exit when no hosts are running.'''
@@ -38,6 +39,7 @@ class TestLayout(unittest.TestCase):
 
 class TestFormatHost(unittest.TestCase):
     '''cping.layouts.legacy.format_host tests.'''
+
     def test_host_status(self):
         '''The host's status, if set, should be shown.'''
         host = cping.protocols.Ping()('localhost')
@@ -72,6 +74,7 @@ class TestFormatHost(unittest.TestCase):
 
 class TestGetHistogram(unittest.TestCase):
     '''cping.layouts.legacy.get_histogram tests.'''
+
     def test_results(self):
         '''Ensure the results are correctly represented.'''
         host = cping.protocols.Ping()('localhost')
@@ -85,6 +88,7 @@ class TestGetHistogram(unittest.TestCase):
 
 class TestGetColor(unittest.TestCase):
     '''cping.layouts.legacy.get_color tests.'''
+
     def test_color(self):
         '''Get the ANSI code for a color'''
         self.assertEqual(cping.layouts.legacy.get_color('red'), '\x1b[31m')
@@ -100,6 +104,7 @@ class TestGetColor(unittest.TestCase):
 
 class TestGetTable(unittest.TestCase):
     '''cping.layouts.legacy.get_table tests.'''
+
     def test_overflow(self):
         '''Create a table with too many hosts to ensure they don't overflow.'''
         hosts = [cping.protocols.Ping()(str(x)) for x in range(60)]

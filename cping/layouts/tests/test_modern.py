@@ -12,6 +12,7 @@ import cping.protocols
 
 class TestLayout(unittest.TestCase):
     '''cping.layouts.modern.Layout tests.'''
+
     @staticmethod
     def wrap_curses_getch(keys):
         '''Returns a callable that will return `keys` one at a time per call.
@@ -115,6 +116,7 @@ class TestLayout(unittest.TestCase):
 
     def test_render_table_curses_error_handling(self):
         '''`render_table` should handle exceptions of `curses.error`.'''
+
         def curses_error():
             raise curses.error()
 
@@ -130,6 +132,7 @@ class TestLayout(unittest.TestCase):
     def test_render(self):
         '''Ensure `render` sets the timeout of the window and clears the input
         buffers after `window.getch`.'''
+
         def getch():
             getch_trigger.wait()
             return ord('q')
@@ -311,6 +314,7 @@ class TestLayout(unittest.TestCase):
 
 class TestGetHostColumns(unittest.TestCase):
     '''cping.layouts.modern.get_host_columns tests.'''
+
     def test_no_results(self):
         '''A host with no results should return place-holders in the stats.'''
         host = cping.protocols.Ping()('hi')
@@ -336,6 +340,7 @@ class TestGetHostColumns(unittest.TestCase):
 
 class TestGetTablePage(unittest.TestCase):
     '''cping.layouts.modern.get_table_page tests.'''
+
     def test_single_page(self):
         '''A page size that shows the entire table.'''
         table = list(range(10))
@@ -357,6 +362,7 @@ class TestGetTablePage(unittest.TestCase):
 
 class TestGetTable(unittest.TestCase):
     '''cping.layouts.modern.get_table tests.'''
+
     def test_column_width(self):
         '''The columns should all have equal lengths among the rows.'''
         hosts = [cping.protocols.Ping()(str(x)) for x in range(3)]
@@ -404,6 +410,7 @@ class TestGetTable(unittest.TestCase):
 
 class TestGetTableSortKey(unittest.TestCase):
     '''cping.layouts.modern.get_table_sort_key tests.'''
+
     def test_cycle(self):
         '''Sorting key should cylce between asc->desc->none->asc->...'''
         self.assertEqual(cping.layouts.modern.get_table_sort_key(1, None), 1)
@@ -418,6 +425,7 @@ class TestGetTableSortKey(unittest.TestCase):
 
 class TestSortHosts(unittest.TestCase):
     '''cping.layouts.modern.sort_hosts tests.'''
+
     def setUp(self):
         # min=1000, avg=2000, max=3000, stdev=1000, loss=0.0
         self.host1 = cping.protocols.Ping()('host1')
