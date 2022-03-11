@@ -1,4 +1,6 @@
 '''cping.protocols.icmp tests'''
+import collections
+import time
 import unittest
 import unittest.mock
 
@@ -46,6 +48,26 @@ class TestPing(unittest.TestCase):
         self.assertEqual(len(host.results), 1)
         self.assertNotEqual(host.results[0]['latency'], -1)
 
+    def test_late_reply(self):
+        '''A response was received after it timed out.'''
+        host = cping.protocols.icmp.Ping(0.0000001)('127.0.0.1')
+        patch = collections.UserDict(cping.protocols.icmp.Ping.host_map)
+        patch.pop = lambda *_: None
+
+        with unittest.mock.patch('cping.protocols.icmp.Ping.host_map', patch):
+            cping.protocols.tests.ping_loop_once(host)
+            time.sleep(0.3)
+
+            self.assertNotEqual(host.results[0]['latency'], -1)
+            self.assertTrue(host.results[0]['error'])
+
+    def test_malformed_packet(self):
+        '''A packet that cannot be unpacked shouldn't crash the receiver thread.'''
+        session = cping.protocols.icmp.Session(6)
+        request = session.create_icmp_echo()
+        protocol = cping.protocols.icmp.Ping()
+        protocol.icmpv6_socket.sendto(request[:8], ('::1', 0))
+
     def test_os_error(self):
         '''Test OSError handling on `socket.sendto`.'''
 
@@ -58,6 +80,13 @@ class TestPing(unittest.TestCase):
             # ping_loop is blocking but will exit when the exception is raised
             host.protocol.ping_loop(host)
             self.assertEqual(host.status, 'Some message')
+
+    def test_unknown_host(self):
+        '''A packet with an unknown identifier should be ignored.'''
+        session = cping.protocols.icmp.Session(6)
+        request = session.create_icmp_echo()
+        protocol = cping.protocols.icmp.Ping()
+        protocol.icmpv6_socket.sendto(request, ('::1', 0))
 
 
 class TestSession(unittest.TestCase):

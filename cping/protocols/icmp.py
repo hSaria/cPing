@@ -9,7 +9,6 @@ import threading
 import time
 
 import cping.protocols
-import cping.utils
 
 SOCKET_TYPE = socket.SOCK_RAW if sys.platform == 'win32' else socket.SOCK_DGRAM
 
@@ -17,10 +16,11 @@ SOCKET_TYPE = socket.SOCK_RAW if sys.platform == 'win32' else socket.SOCK_DGRAM
 class Ping(cping.protocols.Ping):
     '''ICMP echo ping. The possible results:
         * latency=x, error=False: ICMP echo reply
+        * latency=x, error=True: late reply
         * latency=-1, error=False: timeout
     '''
     icmpv4_socket = icmpv6_socket = None
-    match_queue = []
+    host_map = {}
 
     def __init__(self, *args, **kwargs):
         # Create the ICMP sockets if they haven't been already
@@ -37,8 +37,8 @@ class Ping(cping.protocols.Ping):
 
     @staticmethod
     def receiver():
-        '''Monitors the ICMPv4 and ICMPv6 sockets for packets and attempt to
-        match them against `Ping.match_queue`.'''
+        '''Handles incoming ICMPv4 and ICMPv6 sockets for packets by signalling
+        the respective host's ping loop or updating late replies.'''
         icmp_sockets = [Ping.icmpv4_socket, Ping.icmpv6_socket]
 
         while True:
@@ -46,18 +46,35 @@ class Ping(cping.protocols.Ping):
             protocol_socket = select.select(icmp_sockets, [], [])[0][0]
 
             # Strip the ICMP reply as macOS includes the IPv4 header in data
-            data = protocol_socket.recv(2048)[-(cping.utils.DATA_LENGTH + 8):]
+            # pylint: disable=invalid-unary-operand-type  # linter bug
+            data = protocol_socket.recv(8192)[-Session.packet_struct.size:]
 
-            # Checksum (2 bytes) ignored because IPv6 requires a pseudo-header
-            # that's too much work to calculate and is already calculated by the
-            # kernel. Identifier (2 bytes) ignored because Linux overwrites it,
-            # so the globally-unique sequence is being used for tracking.
-            data = data[:2] + b'\x00\x00\x00\x00' + data[6:]
+            # Malformed packet
+            if len(data) < Session.packet_struct.size:
+                continue
 
-            # Obtain copy to avoid list length being changed while iterating
-            for expected, event in Ping.match_queue.copy():
-                if data == expected:
-                    event.set()
+            packet = Session.packet_struct.unpack(data)
+            sequence, identifier, timestamp = packet[-3:]
+
+            # Unknown packet
+            if identifier not in Ping.host_map:
+                continue
+
+            latency = time.perf_counter() - timestamp
+            host, event, interval = Ping.host_map[identifier]
+
+            # Search through all of the results, including the hidden ones.
+            for result in host.raw_results:
+                if result['info'] == sequence:
+                    result['latency'] = latency
+
+                    # Reply arrived on time; inform the host's ping loop to continue
+                    if latency <= interval:
+                        event.set()
+                    # Late reply; the ping loop is already in the next iteration
+                    else:
+                        result['error'] = True
+
                     break
 
     def ping_loop(self, host):
@@ -68,16 +85,19 @@ class Ping(cping.protocols.Ping):
             return
 
         session = Session(4 if host_info[0] == socket.AF_INET else 6)
+        receive_event = threading.Event()
+
+        Ping.host_map[session.identifier] = host, receive_event, self.interval
 
         while not host.stop_signal.is_set():
-            request, reply = session.create_icmp_echo()
-            receive_event = threading.Event()
+            receive_event.clear()
             latency = -1
+            request = session.create_icmp_echo()
 
-            # Add the expected packet to the receiver queue
-            Ping.match_queue.append((reply, receive_event))
-
-            checkpoint = time.perf_counter()
+            # Initially hidden to avoid showing a downed result
+            result = host.add_result(latency,
+                                     hidden=True,
+                                     info=session.sequence)
 
             try:
                 if host_info[0] == socket.AF_INET:
@@ -85,25 +105,25 @@ class Ping(cping.protocols.Ping):
                 else:
                     Ping.icmpv6_socket.sendto(request, host_info[4])
 
+                # A response was received; update the latency for an accurate wait
                 if receive_event.wait(self.interval):
-                    latency = time.perf_counter() - checkpoint
+                    latency = result['latency']
             except OSError as exception:
                 host.status = str(exception)
                 break
-            finally:
-                # Remove from the queue
-                Ping.match_queue.remove((reply, receive_event))
 
-            host.add_result(latency)
+            result['hidden'] = False
 
             # Block until signaled to continue
             self.wait(host, latency)
 
+        Ping.host_map.pop(session.identifier)
+
 
 class Session:
     '''A ping session to a host.'''
-    sequence = -1
-    sequence_lock = threading.Lock()
+    # The final `Hf` is the data, containing the identifier and the timestamp
+    packet_struct = struct.Struct('!BBHHHHf')
 
     def __init__(self, family):
         '''Constructor.
@@ -111,8 +131,16 @@ class Session:
         Args:
             family (int): The IP family of the host. IPv4 if `4`, else IPv6.
         '''
-        self.family = 4 if family == 4 else 6
-        self.identifier = random.randrange(1, 2**16)
+        # ICMP type field differs between ICMPv4 and ICMPv6
+        self.packet_type = 8 if family == 4 else 128
+        self.sequence = random.randrange(1, 2**16)
+
+        # Ensure the session identifier is unique between hosts
+        while True:
+            self.identifier = random.randrange(1, 2**16)
+
+            if self.identifier not in Ping.host_map:
+                break
 
     @staticmethod
     def get_checksum(data):
@@ -132,27 +160,18 @@ class Session:
         # One's complement of the sum, normalized to 16 bits
         return struct.pack('!H', socket.htons(~checksum & 0xffff))
 
-    @staticmethod
-    def next_sequence():
-        '''Returns the next sequence, incrementing it by 1.'''
-        with Session.sequence_lock:
-            Session.sequence = Session.sequence + 1 & 0xffff
-            return Session.sequence
-
     def create_icmp_echo(self):
-        '''Returns tuple of an ICMP echo request and its expected reply (bytes).'''
-        sequence = Session.next_sequence()
-        data = cping.utils.generate_data()
+        '''Returns the bytes of an ICMP echo request.'''
+        self.sequence = self.sequence + 1 & 0xffff
 
-        # ICMP type field differs between ICMPv4 and ICMPv6
-        request_type, reply_type = (8, 0) if self.family == 4 else (128, 129)
+        # The data contains another copy of the identifier as the one in the
+        # header is stripped in some Linux distributions
+        request = Session.packet_struct.pack(self.packet_type, 0, 0,
+                                             self.identifier, self.sequence,
+                                             self.identifier,
+                                             time.perf_counter())
 
         # Checksum is calculated with the checksum in the header set to 0
-        request = struct.pack('!BBHHH', request_type, 0, 0, self.identifier,
-                              sequence) + data
         request = request[:2] + Session.get_checksum(request) + request[4:]
 
-        # Identifier ignored; see matching logic in `Ping.receiver`
-        reply = struct.pack('!BBHHH', reply_type, 0, 0, 0, sequence) + data
-
-        return request, reply
+        return request
