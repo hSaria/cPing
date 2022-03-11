@@ -76,4 +76,4 @@ class Ping(cping.protocols.Ping):
             host.add_result(latency, error)
 
             # Block until signaled to continue
-            self.wait(host, latency)
+            host.wait(latency)

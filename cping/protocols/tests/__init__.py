@@ -23,7 +23,12 @@ def ping_change_interval(test_case, protocol):
 
 def ping_loop_once(host):
     '''Start the host and run a single iteration.'''
-    host.protocol.wait = lambda *_: host.stop_signal.set()
-    host.start()
-    host.stop_signal.wait()
-    host.stop_signal.clear()
+    old_wait = host.wait
+
+    try:
+        host.wait = lambda *_: host.stop_signal.set()
+        host.start()
+        host.stop_signal.wait()
+        host.stop_signal.clear()
+    finally:
+        host.wait = old_wait

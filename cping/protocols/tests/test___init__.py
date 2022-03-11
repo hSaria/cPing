@@ -5,7 +5,7 @@ import unittest
 
 import cping.protocols
 
-# pylint: disable=protected-access
+# pylint: disable=protected-access,too-many-public-methods
 
 
 class TestHost(unittest.TestCase):
@@ -269,18 +269,18 @@ class TestPing(unittest.TestCase):
 
         # The latency is subtracted from the protocol interval
         checkpoint = time.time()
-        host.protocol.wait(host, 0.5)
+        host.wait(0.5)
         self.assertTrue(0.4 <= time.time() - checkpoint <= 0.6)
 
         # No timeout when the ping failed (already spent the full interval)
         checkpoint = time.time()
-        host.protocol.wait(host, -1)
+        host.wait(-1)
         self.assertLess(time.time() - checkpoint, 0.1)
 
         # No timeout when the burst mode is enabled
         checkpoint = time.time()
         host.burst_mode.set()
-        host.protocol.wait(host, 0.5)
+        host.wait(0.5)
         self.assertLess(time.time() - checkpoint, 0.1)
 
     def test_invalid_type_interval(self):

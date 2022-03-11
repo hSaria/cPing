@@ -226,6 +226,21 @@ class Host:
         if block:
             self._test_thread.join()
 
+    def wait(self, latency):
+        '''Blocks until ready for an event (i.e. burst mode is enabled or
+        shutdown has been signaled) or until it is time for the next ping.
+
+        Args:
+            host (cping.protocols.Host): The host in question.
+            latency (float): Latency of the previous ping.
+        '''
+        # No timeout if test failed or burst mode is enabled
+        if latency == -1 or self.burst_mode.is_set():
+            return
+
+        # Account for the latency of the previous test
+        self.ready_signal.wait(self.protocol.interval - latency)
+
 
 class Ping:
     '''A ping base class. Subclasses must implement `ping_loop`.'''
@@ -273,18 +288,3 @@ class Ping:
         '''
         raise NotImplementedError('cping.protocols.Ping is a base class; it '
                                   'does not implement ping_loop')
-
-    def wait(self, host, latency):
-        '''Blocks until `host` is ready for an event (i.e. burst mode is enabled
-        or shutdown has been signaled) or until it is time for the next ping.
-
-        Args:
-            host (cping.protocols.Host): The host in question.
-            latency (float): Latency of the previous ping.
-        '''
-        # No timeout if test failed or burst mode is enabled
-        if latency == -1 or host.burst_mode.is_set():
-            return
-
-        # Account for the latency of the previous test
-        host.ready_signal.wait(self.interval - latency)
