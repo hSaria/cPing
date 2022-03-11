@@ -17,8 +17,30 @@ class TestHost(unittest.TestCase):
         host.add_result(1)
         host.add_result(2, True)
 
-        self.assertEqual(host.results[0], {'latency': 1, 'error': False})
-        self.assertEqual(host.results[1], {'latency': 2, 'error': True})
+        self.assertEqual(host.results[0], {
+            'latency': 1,
+            'error': False,
+            'hidden': False,
+            'info': None
+        })
+        self.assertEqual(host.results[1], {
+            'latency': 2,
+            'error': True,
+            'hidden': False,
+            'info': None
+        })
+
+    def test_add_result_hidden(self):
+        '''A hidden result should not be present in `Host.results`.'''
+        host = cping.protocols.Ping()('localhost')
+        host.add_result(1, hidden=True)
+
+        self.assertEqual(len(host.results), 0)
+        self.assertEqual(len(host.raw_results), 1)
+
+        host.raw_results[0]['hidden'] = False
+
+        self.assertEqual(len(host.results), 1)
 
     def test_add_result_invalid_type_latency(self):
         '''Add a result with an invalid latency type.'''
@@ -98,7 +120,7 @@ class TestHost(unittest.TestCase):
 
     def test_set_results_length_invalid_type_new_length(self):
         '''set_results_length with wrong new_length.'''
-        with self.assertRaisesRegex(TypeError, 'new_length must be an int'):
+        with self.assertRaisesRegex(TypeError, 'length must be an int'):
             cping.protocols.Ping()('localhost').set_results_length(10.0)
 
     def test_start(self):

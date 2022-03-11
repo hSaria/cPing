@@ -76,11 +76,8 @@ class Host:
 
     @property
     def results(self):
-        '''A `collections.deque` containing results, each as a dictionary of
-            * latency (float): the latency of a ping probe (-1 for no reply)
-            * error (bool): whether the ping reply was an error (e.g. TCP-RST)
-        '''
-        return self.raw_results.copy()
+        '''A list of results, each a dictionary with 'latency' and 'error'.'''
+        return [x for x in self.raw_results.copy() if not x['hidden']]
 
     @property
     def results_summary(self):
@@ -137,13 +134,16 @@ class Host:
 
         return summary
 
-    def add_result(self, latency, error=False):
+    def add_result(self, latency, error=False, hidden=False, info=None):
         '''Adds a result (a float that represents the latency of a ping reply).
 
         Args:
             latency (float): Latency between the ping request and its reply.
             error (bool): Whether the reply is an error, like a TCP-RST when the
                 port is not open.
+            hidden (bool): If True, `self.results` will not include it, but it
+                can still be accessed in `self.raw_results`.
+            info: An arbitrary object placed into the result's dictionary.
 
         Raises:
             TypeError: If `latency` is not a float. If `error` is not a boolean.
@@ -154,8 +154,17 @@ class Host:
         if not isinstance(error, bool):
             raise TypeError('error must be a boolean')
 
-        self.raw_results.append({'latency': latency, 'error': error})
+        result = {
+            'latency': latency,
+            'error': error,
+            'hidden': hidden,
+            'info': info
+        }
+
+        self.raw_results.append(result)
         self._cached_results_summary.cache_clear()
+
+        return result
 
     def is_running(self):
         '''Returns `True` if the test is running. Otherwise, `False`.'''
