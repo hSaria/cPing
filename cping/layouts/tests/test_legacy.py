@@ -52,10 +52,10 @@ class TestFormatHost(unittest.TestCase):
         '''The line-width should update the host's results length.'''
         # pylint: disable=no-member  # Linter bug
         host = cping.protocols.Ping()('localhost')
-        old_length = host.results.maxlen
+        old_length = host.raw_results.maxlen
 
         cping.layouts.legacy.format_host(host, 4, 150)
-        self.assertGreater(host.results.maxlen, old_length)
+        self.assertGreater(host.raw_results.maxlen, old_length)
 
     def test_statistics(self):
         '''The host's statistics are shown.'''

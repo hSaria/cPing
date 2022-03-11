@@ -33,10 +33,11 @@ class Host:
             raise TypeError('protocol must be an instance of '
                             'cping.protocols.Ping')
 
+        self.raw_results = collections.deque(maxlen=RESULTS_LENGTH_MINIMUM)
+
         self._address = address
         self._burst_mode = threading.Event()
         self._protocol = protocol
-        self._results = collections.deque(maxlen=RESULTS_LENGTH_MINIMUM)
         self._status = None
         self._stop_signal = threading.Event()
         self._test_thread = None
@@ -79,7 +80,7 @@ class Host:
             * latency (float): the latency of a ping probe (-1 for no reply)
             * error (bool): whether the ping reply was an error (e.g. TCP-RST)
         '''
-        return self._results.copy()
+        return self.raw_results.copy()
 
     @property
     def results_summary(self):
@@ -153,33 +154,33 @@ class Host:
         if not isinstance(error, bool):
             raise TypeError('error must be a boolean')
 
-        self._results.append({'latency': latency, 'error': error})
+        self.raw_results.append({'latency': latency, 'error': error})
         self._cached_results_summary.cache_clear()
 
     def is_running(self):
         '''Returns `True` if the test is running. Otherwise, `False`.'''
         return self._test_thread is not None and self._test_thread.is_alive()
 
-    def set_results_length(self, new_length):
+    def set_results_length(self, length):
         '''Changes the results maximum length to be `new_length`.
 
         Args:
-            new_length (int): The new maximum length of the results.
+            length (int): The new maximum length of the results.
 
         Raises:
-            TypeError: If `new_length` is not an integer.
+            TypeError: If `length` is not an integer.
         '''
-        if not isinstance(new_length, int):
-            raise TypeError('new_length must be an integer')
+        if not isinstance(length, int):
+            raise TypeError('length must be an integer')
 
-        new_length = max(new_length, RESULTS_LENGTH_MINIMUM)
+        length = max(length, RESULTS_LENGTH_MINIMUM)
 
         # Already at new length
-        if self._results.maxlen == new_length:
+        if self.raw_results.maxlen == length:
             return
 
         # Create deque with the new length
-        self._results = collections.deque(self._results, maxlen=new_length)
+        self.raw_results = collections.deque(self.raw_results, maxlen=length)
 
     def start(self, delay=0):
         '''Clears `self.status` and starts the ping loop.
