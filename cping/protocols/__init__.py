@@ -127,7 +127,7 @@ class Host:
 
         if results:
             summary['min'] = min(results) * 1000
-            summary['avg'] = statistics.mean(results) * 1000
+            summary['avg'] = sum(results) / len(results) * 1000
             summary['max'] = max(results) * 1000
             summary['loss'] = (1 - (len(results) / len(self.results)))
 
