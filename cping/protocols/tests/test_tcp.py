@@ -46,11 +46,7 @@ class TestPing(unittest.TestCase):
 
     def test_failed_resolution(self):
         '''Failed resolution.'''
-        host = cping.protocols.tcp.Ping(1)('there.exampe.org')
-
-        # ping_loop is blocking but will exit when the resolution fails
-        host.protocol.ping_loop(host)
-        self.assertEqual(host.status, 'Host resolution failed')
+        cping.protocols.tests.resolve_failed(self, cping.protocols.tcp.Ping(1))
 
     def test_host_closed(self):
         '''TCP-RST is sent back.'''

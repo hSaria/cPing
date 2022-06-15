@@ -1,5 +1,21 @@
 '''Generic code for cping.protocols tests.'''
+import socket
 import time
+import unittest.mock
+
+
+def resolve_failed(test_case, protocol):
+    '''Assert failed host resolution is handled gracefully.'''
+    host = protocol('there.exampe.org')
+
+    def patch(*_1, **_2):
+        raise socket.gaierror
+
+    with unittest.mock.patch('socket.getaddrinfo', patch):
+        # ping_loop is blocking but will exit when the resolution fails
+        host.protocol.ping_loop(host)
+
+    test_case.assertEqual(host.status, 'Host resolution failed')
 
 
 def ping_change_interval(test_case, protocol):

@@ -18,11 +18,7 @@ class TestPing(unittest.TestCase):
 
     def test_failed_resolution(self):
         '''Failed resolution.'''
-        host = cping.protocols.icmp.Ping()('there.exampe.org')
-
-        # ping_loop is blocking but will exit when the resolution fails
-        host.protocol.ping_loop(host)
-        self.assertEqual(host.status, 'Host resolution failed')
+        cping.protocols.tests.resolve_failed(self, cping.protocols.icmp.Ping())
 
     def test_host_not_responding(self):
         '''Nothing is sent back.'''
