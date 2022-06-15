@@ -10,7 +10,6 @@ import cping.protocols.tests
 
 class TestPing(unittest.TestCase):
     '''cping.protocols.icmp.Ping tests.'''
-    # pylint: disable=no-self-use
 
     def test_change_interval(self):
         '''Change the interval in the middle of the test.'''

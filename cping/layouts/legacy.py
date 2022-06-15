@@ -93,7 +93,7 @@ def get_table(hosts, all_hosts=False):
     '''
     table = ''
     term_size = shutil.get_terminal_size()
-    host_padding = max([len(str(x)) for x in hosts]) + 1
+    host_padding = max(len(str(x)) for x in hosts) + 1
 
     for index, host in enumerate(hosts):
         # Not printing all hosts and lines limit reached
