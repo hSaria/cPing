@@ -1,7 +1,24 @@
+import os
+
 from setuptools import find_packages, setup
 
-with open('README.md', 'r') as f:
-    long_description = f.read()
+
+def get_version():
+    base_path = os.path.abspath(os.path.dirname(__file__))
+    module_path = os.path.join(base_path, 'cping/__init__.py')
+
+    with open(module_path, 'r', encoding='utf-8') as file:
+        for line in file.readlines():
+            if line.startswith('__version__'):
+                return line.split('"' if '"' in line else "'")[1]
+
+        raise RuntimeError("Unable to find version string.")
+
+
+def get_long_description():
+    with open('README.md', 'r', encoding='utf-8') as file:
+        return file.read()
+
 
 setup(
     name='cping',
@@ -18,10 +35,10 @@ setup(
     entry_points={'console_scripts': ['cping = cping.__main__:main']},
     install_requires=['windows-curses; sys_platform == "win32"'],
     license='MIT',
-    long_description=long_description,
+    long_description=get_long_description(),
     long_description_content_type='text/markdown',
     packages=find_packages(),
     python_requires='>=3.6.0',
     url='https://github.com/hSaria/cPing',
-    version='0.1.7-dev',
+    version=get_version(),
 )

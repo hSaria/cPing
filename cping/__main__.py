@@ -46,6 +46,11 @@ def args_init(args=None):
                         type=int,
                         help='test using TCP SYN (default: ICMP echo)')
 
+    parser.add_argument('-v',
+                        '--version',
+                        action='version',
+                        version=f'%(prog)s {cping.__version__}')
+
     args = parser.parse_args(args=args)
 
     if args.interval < INTERVAL_MINIMUM:
