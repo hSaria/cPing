@@ -122,8 +122,8 @@ class Ping(cping.protocols.Ping):
 
 class Session:
     '''A ping session to a host.'''
-    # The final `Hf` is the data, containing the identifier and the timestamp
-    packet_struct = struct.Struct('!BBHHHHf')
+    # The final `Hd` is the data, containing the identifier and the timestamp
+    packet_struct = struct.Struct('!BBHHHHd')
 
     def __init__(self, family):
         '''Constructor.
