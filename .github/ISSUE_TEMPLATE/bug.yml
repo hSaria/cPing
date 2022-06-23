@@ -1,0 +1,19 @@
+---
+name: Bug
+description: Something that's not supposed to happen
+labels: bug
+body:
+  - type: input
+    attributes:
+      label: cPing version
+      description: Run `cping -v` to get that info.
+      placeholder: cping 0.1.7
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: What's happening?
+      description: >
+        Describe the issue and provide any details that helps recreate it.
+    validations:
+      required: true
