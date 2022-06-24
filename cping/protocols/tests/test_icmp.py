@@ -67,6 +67,35 @@ class TestPing(unittest.TestCase):
         protocol = cping.protocols.icmp.Ping()
         protocol.icmpv6_socket.sendto(request, ('::1', 0))
 
+    def test_error_handling_known(self):
+        '''Known exceptions should be ignored'''
+
+        def patch1(*_):
+            raise OSError(1, 'Hello1')
+
+        def patch2(*_):
+            raise ValueError('Hello2')
+
+        with unittest.mock.patch('cping.protocols.IGNORED_OS_ERRORS', (1, )):
+            # Used to trigger the known exception
+            with unittest.mock.patch('socket.socket.sendto', patch1):
+                # Used to exit from the ping loop and ensure a wait is triggered
+                with unittest.mock.patch('time.sleep', patch2):
+                    with self.assertRaisesRegex(ValueError, 'Hello2'):
+                        protocol = cping.protocols.icmp.Ping()
+                        protocol.ping_loop(protocol('127.0.0.1'))
+
+    def test_error_handling_unknown(self):
+        '''An unknown exception should be raised'''
+
+        def patch(*_):
+            raise OSError(666, 'Hello')
+
+        with unittest.mock.patch('socket.socket.sendto', patch):
+            with self.assertRaisesRegex(OSError, 'Hello'):
+                protocol = cping.protocols.icmp.Ping(50005)
+                protocol.ping_loop(protocol('127.0.0.1'))
+
 
 class TestSession(unittest.TestCase):
     '''cping.protocols.icmp.Session tests.'''

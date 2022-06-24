@@ -2,6 +2,7 @@
 import socket
 import time
 import unittest
+import unittest.mock
 
 import cping.protocols.tcp
 import cping.protocols.tests
@@ -75,6 +76,35 @@ class TestPing(unittest.TestCase):
         self.assertEqual(len(host.results), 1)
         self.assertNotEqual(host.results[0]['latency'], -1)
         self.assertFalse(host.results[0]['error'])
+
+    def test_error_handling_known(self):
+        '''Known exceptions should be ignored'''
+
+        def patch1(*_):
+            raise OSError(1, 'Hello1')
+
+        def patch2(*_):
+            raise ValueError('Hello2')
+
+        with unittest.mock.patch('cping.protocols.IGNORED_OS_ERRORS', (1, )):
+            # Used to trigger the known exception
+            with unittest.mock.patch('socket.socket.settimeout', patch1):
+                # Used to exit from the ping loop and ensure a wait is triggered
+                with unittest.mock.patch('time.sleep', patch2):
+                    with self.assertRaisesRegex(ValueError, 'Hello2'):
+                        protocol = cping.protocols.tcp.Ping(50004)
+                        protocol.ping_loop(protocol('127.0.0.1'))
+
+    def test_error_handling_unknown(self):
+        '''An unknown exception should be raised'''
+
+        def patch(*_):
+            raise OSError(666, 'Hello')
+
+        with unittest.mock.patch('socket.socket.settimeout', patch):
+            with self.assertRaisesRegex(OSError, 'Hello'):
+                protocol = cping.protocols.tcp.Ping(50005)
+                protocol.ping_loop(protocol('127.0.0.1'))
 
     def test_invalid_type_port(self):
         '''TCP with an invalid port type.'''
