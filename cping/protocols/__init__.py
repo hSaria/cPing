@@ -254,16 +254,19 @@ class Host:
 class Ping:
     '''A ping base class. Subclasses must implement `ping_loop`.'''
 
-    def __init__(self, interval=1):
+    def __init__(self, interval=1, family=None):
         '''Constructor.
 
         Args:
             interval (float): Seconds, of a fraction thereof, between pings.
+            family (socket.AddressFamily): The socket address family.
 
         Raises:
-            TypeError: If `interval` is not a float.
+            TypeError: If `interval` is not a float. If `family` is not None and
+                not an instance of `socket.AddressFamily`.
         '''
         self.interval = interval
+        self.family = family
 
     def __call__(self, address):
         '''Returns `cping.protocols.Host(address, self)`.
@@ -272,6 +275,19 @@ class Ping:
             address (str): Ping destination.
         '''
         return Host(address, self)
+
+    @property
+    def family(self):
+        '''The socket address family.'''
+        return self._family
+
+    @family.setter
+    def family(self, value):
+        if value and not isinstance(value, socket.AddressFamily):
+            raise TypeError('family must be an instance of '
+                            'socket.AddressFamily or None')
+
+        self._family = value or 0
 
     @property
     def interval(self):
@@ -294,6 +310,7 @@ class Ping:
         # Use AI_CANONNAME to force out the default of AI_V4MAPPED | AI_ADDRCONFIG
         return socket.getaddrinfo(host=address,
                                   port=0,
+                                  family=self.family,
                                   flags=socket.AI_CANONNAME)[0]
 
     def ping_loop(self, host):

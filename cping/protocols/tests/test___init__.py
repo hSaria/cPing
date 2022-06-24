@@ -302,6 +302,11 @@ class TestPing(unittest.TestCase):
         host.wait(0.5)
         self.assertLess(time.time() - checkpoint, 0.1)
 
+    def test_invalid_type_family(self):
+        '''Create an instance of Ping with an invalid interval type.'''
+        with self.assertRaisesRegex(TypeError, 'socket.AddressFamily or None'):
+            cping.protocols.Ping(family='hi')
+
     def test_invalid_type_interval(self):
         '''Create an instance of Ping with an invalid interval type.'''
         with self.assertRaisesRegex(TypeError, 'interval must be a float'):
