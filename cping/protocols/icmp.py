@@ -105,12 +105,13 @@ class Ping(cping.protocols.Ping):
                 else:
                     Ping.icmpv6_socket.sendto(request, host_info[4])
 
-                # A response was received; update the latency for an accurate wait
-                if receive_event.wait(self.interval):
-                    latency = result['latency']
+                # Wait until a response is received or the interval expires
+                receive_event.wait(self.interval)
             except OSError as exception:
-                host.status = str(exception)
-                break
+                if exception.errno in cping.protocols.IGNORED_OS_ERRORS:
+                    time.sleep(self.protocol.interval)
+                else:
+                    raise
 
             result['hidden'] = False
 

@@ -66,8 +66,12 @@ class Ping(cping.protocols.Ping):
                 except ConnectionError:
                     # Got a response but it was an error (e.g. TCP-RST)
                     error = True
-                except OSError:
-                    # OS errors, like 'Host is down' or socket.timeout
+                except OSError as exception:
+                    if exception.errno in cping.protocols.IGNORED_OS_ERRORS:
+                        time.sleep(self.protocol.interval)
+                    elif not isinstance(exception, socket.timeout):
+                        raise
+
                     latency = -1
 
                 if latency is None:

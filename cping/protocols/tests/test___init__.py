@@ -164,6 +164,20 @@ class TestHost(unittest.TestCase):
         with self.assertRaisesRegex(TypeError, 'delay must be a float'):
             cping.protocols.Ping()('localhost').start(delay='hi')
 
+    def test_start_os_error(self):
+        '''Test OSError handling on `host.start`.'''
+
+        class PatchedPing(cping.protocols.Ping):
+
+            def ping_loop(self, host):
+                raise OSError(123, 'Some message')
+
+        host = PatchedPing()('127.0.0.1')
+        host.start()
+        host.stop(block=True)
+
+        self.assertEqual(host.status, 'Some message')
+
     def test_stop(self):
         '''Ensure stop sets stop_signal and, if `block=True`, waits until
         ping_loop exits.'''

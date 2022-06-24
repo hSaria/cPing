@@ -64,19 +64,6 @@ class TestPing(unittest.TestCase):
         protocol = cping.protocols.icmp.Ping()
         protocol.icmpv6_socket.sendto(request[:8], ('::1', 0))
 
-    def test_os_error(self):
-        '''Test OSError handling on `socket.sendto`.'''
-
-        def patch(*_):
-            raise OSError('Some message')
-
-        host = cping.protocols.icmp.Ping()('127.0.0.1')
-
-        with unittest.mock.patch('threading.Event.wait', patch):
-            # ping_loop is blocking but will exit when the exception is raised
-            host.protocol.ping_loop(host)
-            self.assertEqual(host.status, 'Some message')
-
     def test_unknown_host(self):
         '''A packet with an unknown identifier should be ignored.'''
         session = cping.protocols.icmp.Session(6)

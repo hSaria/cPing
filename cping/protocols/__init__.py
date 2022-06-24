@@ -1,11 +1,15 @@
 '''Generic code and base classes for ping protocols.'''
 import collections
+import errno
 import statistics
 import threading
 import time
 from functools import lru_cache
 
 import cping.utils
+
+# Ignore "Host is Down" and "No route to host"
+IGNORED_OS_ERRORS = (errno.EHOSTDOWN, errno.EHOSTUNREACH)
 
 # Lower bound on the number of results
 RESULTS_LENGTH_MINIMUM = 50
@@ -205,7 +209,11 @@ class Host:
 
         def ping_loop_wrapper():
             time.sleep(delay)
-            self._protocol.ping_loop(self)
+
+            try:
+                self._protocol.ping_loop(self)
+            except OSError as exception:
+                self.status = exception.strerror or str(exception)
 
         self._status = None
         self.stop_signal.clear()
