@@ -283,6 +283,7 @@ class Ping:
 
     @family.setter
     def family(self, value):
+        # pylint: disable=no-member  # linter bug
         if value and not isinstance(value, socket.AddressFamily):
             raise TypeError('family must be an instance of '
                             'socket.AddressFamily or None')

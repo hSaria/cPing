@@ -2,6 +2,7 @@
 import threading
 import time
 import unittest
+import unittest.mock
 
 import cping.protocols
 
@@ -167,14 +168,13 @@ class TestHost(unittest.TestCase):
     def test_start_os_error(self):
         '''Test OSError handling on `host.start`.'''
 
-        class PatchedPing(cping.protocols.Ping):
+        def patch(*_):
+            raise OSError(666, 'Some message')
 
-            def ping_loop(self, host):
-                raise OSError(123, 'Some message')
-
-        host = PatchedPing()('127.0.0.1')
-        host.start()
-        host.stop(block=True)
+        with unittest.mock.patch('cping.protocols.Ping.ping_loop', patch):
+            host = cping.protocols.Ping()('127.0.0.1')
+            host.start()
+            host.stop(block=True)
 
         self.assertEqual(host.status, 'Some message')
 
