@@ -1,5 +1,6 @@
 '''Command line script.'''
 import argparse
+import socket
 import sys
 
 import cping
@@ -18,6 +19,17 @@ def args_init(args=None):
     parser = argparse.ArgumentParser(formatter_class=formatter)
 
     parser.add_argument('host', nargs='+', help='one or more hosts to ping')
+    family = parser.add_mutually_exclusive_group()
+
+    family.add_argument('-4',
+                        '--ipv4',
+                        action='store_true',
+                        help='force IPv4 (default: auto-detected by OS)')
+
+    family.add_argument('-6',
+                        '--ipv6',
+                        action='store_true',
+                        help='force IPv6 (default: auto-detected by OS)')
 
     parser.add_argument('-i',
                         '--interval',
@@ -52,6 +64,12 @@ def args_init(args=None):
                         version=f'%(prog)s {cping.__version__}')
 
     args = parser.parse_args(args=args)
+    args.family = None
+
+    if args.ipv4:
+        args.family = socket.AF_INET
+    elif args.ipv6:
+        args.family = socket.AF_INET6
 
     if args.interval < INTERVAL_MINIMUM:
         parser.error(f'minimum interval is {INTERVAL_MINIMUM}')
@@ -69,9 +87,11 @@ def main(args=None):
 
     try:
         if args.port is not None:
-            ping = cping.PingTCP(port=args.port, interval=args.interval)
+            ping = cping.PingTCP(port=args.port,
+                                 interval=args.interval,
+                                 family=args.family)
         else:
-            ping = cping.PingICMP(interval=args.interval)
+            ping = cping.PingICMP(interval=args.interval, family=args.family)
 
         if args.layout == 'legacy':
             layout = cping.LayoutLegacy(ping)
