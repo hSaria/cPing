@@ -63,7 +63,7 @@ class Ping(cping.protocols.Ping):
                     error = True
                 except OSError as exception:
                     if exception.errno in cping.protocols.IGNORED_OS_ERRORS:
-                        time.sleep(self.protocol.interval)
+                        time.sleep(self.interval)
                     elif not isinstance(exception, socket.timeout):
                         raise
 

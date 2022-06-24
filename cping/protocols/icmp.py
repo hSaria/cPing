@@ -104,7 +104,7 @@ class Ping(cping.protocols.Ping):
                 receive_event.wait(self.interval)
             except OSError as exception:
                 if exception.errno in cping.protocols.IGNORED_OS_ERRORS:
-                    time.sleep(self.protocol.interval)
+                    time.sleep(self.interval)
                 else:
                     raise
 
