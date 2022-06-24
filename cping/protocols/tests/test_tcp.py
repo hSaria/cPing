@@ -44,10 +44,6 @@ class TestPing(unittest.TestCase):
         self.assertNotEqual(host.results[1]['latency'], -1)
         self.assertTrue(host.results[1]['error'])
 
-    def test_failed_resolution(self):
-        '''Failed resolution.'''
-        cping.protocols.tests.resolve_failed(self, cping.protocols.tcp.Ping(1))
-
     def test_host_closed(self):
         '''TCP-RST is sent back.'''
         host = cping.protocols.tcp.Ping(50001)('127.0.0.1')

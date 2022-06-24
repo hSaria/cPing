@@ -43,13 +43,8 @@ class Ping(cping.protocols.Ping):
         self._port = value
 
     def ping_loop(self, host):
-        try:
-            host_info = socket.getaddrinfo(host=host.address,
-                                           port=self.port,
-                                           proto=socket.IPPROTO_TCP)[0]
-        except socket.gaierror:
-            host.status = 'Host resolution failed'
-            return
+        host_info = self.resolve(host.address)
+        family = host_info[0]
 
         while not host.stop_signal.is_set():
             # Update the port in the host_info in case it was changed
@@ -57,7 +52,7 @@ class Ping(cping.protocols.Ping):
             latency = None
             error = False
 
-            with socket.socket(host_info[0], host_info[1]) as test_socket:
+            with socket.socket(family, socket.SOCK_STREAM) as test_socket:
                 checkpoint = time.perf_counter()
 
                 try:

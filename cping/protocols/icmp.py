@@ -78,12 +78,7 @@ class Ping(cping.protocols.Ping):
                     break
 
     def ping_loop(self, host):
-        try:
-            host_info = socket.getaddrinfo(host=host.address, port=None)[0]
-        except socket.gaierror:
-            host.status = 'Host resolution failed'
-            return
-
+        host_info = self.resolve(host.address)
         session = Session(4 if host_info[0] == socket.AF_INET else 6)
         receive_event = threading.Event()
 

@@ -272,6 +272,11 @@ class TestHost(unittest.TestCase):
 class TestPing(unittest.TestCase):
     '''cping.protocols.Ping tests.'''
 
+    def test_resolve(self):
+        '''Host resolution.'''
+        host_info = cping.protocols.Ping().resolve('localhost')
+        self.assertIn(host_info[4][0], ('127.0.0.1', '::1'))
+
     def test_ping_loop(self):
         '''Ensure ping_loop raises NotImplementedError.'''
         with self.assertRaises(NotImplementedError):

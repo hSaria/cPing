@@ -16,10 +16,6 @@ class TestPing(unittest.TestCase):
         protocol = cping.protocols.icmp.Ping()
         cping.protocols.tests.ping_change_interval(self, protocol)
 
-    def test_failed_resolution(self):
-        '''Failed resolution.'''
-        cping.protocols.tests.resolve_failed(self, cping.protocols.icmp.Ping())
-
     def test_host_not_responding(self):
         '''Nothing is sent back.'''
         host = cping.protocols.icmp.Ping(0.2)('1.2.3.4')

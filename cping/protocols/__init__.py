@@ -1,6 +1,7 @@
 '''Generic code and base classes for ping protocols.'''
 import collections
 import errno
+import socket
 import statistics
 import threading
 import time
@@ -283,6 +284,17 @@ class Ping:
             raise TypeError('interval must be a float')
 
         self._interval = value
+
+    def resolve(self, address):
+        '''Returns the tuple of the first item from `socket.getaddrinfo`.
+
+        Args:
+            address (str): The host to resolve.
+        '''
+        # Use AI_CANONNAME to force out the default of AI_V4MAPPED | AI_ADDRCONFIG
+        return socket.getaddrinfo(host=address,
+                                  port=0,
+                                  flags=socket.AI_CANONNAME)[0]
 
     def ping_loop(self, host):
         '''A blocking call that will begin pinging the host and registering the
