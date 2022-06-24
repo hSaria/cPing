@@ -8,7 +8,7 @@ import unittest.mock
 import cping.layouts.modern
 import cping.protocols
 
-# Regarding `list(window.mock_calls[x])[0][y]`, this is a workaround to pre-3.8
+# Regarding `mock_calls[x][1][y]`, `args` was introduced in Python 3.8
 
 
 class TestLayout(unittest.TestCase):
@@ -74,17 +74,17 @@ class TestLayout(unittest.TestCase):
         # The first result will not fit because of the length limit
         self.assertEqual(len(window.mock_calls), 3)
 
-        self.assertEqual(list(window.mock_calls[0])[1][0], 1)
-        self.assertEqual(list(window.mock_calls[0])[1][1], 2)
-        self.assertEqual(list(window.mock_calls[0])[1][3], green)
+        self.assertEqual(window.mock_calls[0][1][0], 1)
+        self.assertEqual(window.mock_calls[0][1][1], 2)
+        self.assertEqual(window.mock_calls[0][1][3], green)
 
-        self.assertEqual(list(window.mock_calls[1])[1][0], 1)
-        self.assertEqual(list(window.mock_calls[1])[1][1], 3)
-        self.assertEqual(list(window.mock_calls[1])[1][3], yellow)
+        self.assertEqual(window.mock_calls[1][1][0], 1)
+        self.assertEqual(window.mock_calls[1][1][1], 3)
+        self.assertEqual(window.mock_calls[1][1][3], yellow)
 
-        self.assertEqual(list(window.mock_calls[2])[1][0], 1)
-        self.assertEqual(list(window.mock_calls[2])[1][1], 4)
-        self.assertEqual(list(window.mock_calls[2])[1][3], red)
+        self.assertEqual(window.mock_calls[2][1][0], 1)
+        self.assertEqual(window.mock_calls[2][1][1], 4)
+        self.assertEqual(window.mock_calls[2][1][3], red)
 
     def test_render_table(self):
         '''`render_table` should call `window.erase`, `window.addnstr`, and
@@ -106,13 +106,13 @@ class TestLayout(unittest.TestCase):
         self.assertEqual(unittest.mock.call.refresh(), window.mock_calls[5])
 
         # The table is ordered correctly
-        self.assertTrue(list(window.mock_calls[1])[1][2].startswith(' HOST'))
-        self.assertTrue(list(window.mock_calls[2])[1][2].startswith('host1'))
-        self.assertTrue(list(window.mock_calls[3])[1][2].startswith('host2'))
-        self.assertTrue(list(window.mock_calls[4])[1][2].startswith(' PAGE'))
+        self.assertTrue(window.mock_calls[1][1][2].startswith(' HOST'))
+        self.assertTrue(window.mock_calls[2][1][2].startswith('host1'))
+        self.assertTrue(window.mock_calls[3][1][2].startswith('host2'))
+        self.assertTrue(window.mock_calls[4][1][2].startswith(' PAGE'))
 
         # The header is selected
-        header_attributes = list(window.mock_calls[1])[1][4]
+        header_attributes = window.mock_calls[1][1][4]
         self.assertEqual(header_attributes & curses.A_BOLD, curses.A_BOLD)
 
     def test_render_table_curses_error_handling(self):
@@ -229,7 +229,7 @@ class TestLayout(unittest.TestCase):
             # Startup table render (selection at 0). Key down twice, selection
             # at 1; reached bottom. Key up twice, selection at 0; reached top
             for call, selection in zip(mock.call_args_list, [0, 1, 1, 0, 0]):
-                self.assertEqual(list(call)[0][2], selection)
+                self.assertEqual(call[0][2], selection)
 
     def test_render_function_sort(self):
         '''Ensure accepted sort keys are between 0 and 6.'''
@@ -249,7 +249,7 @@ class TestLayout(unittest.TestCase):
             self.assertEqual(len(mock.call_args_list), 7)
 
             for call, sort_key in zip(mock.call_args_list, range(7)):
-                self.assertEqual(list(call)[0][0], sort_key)
+                self.assertEqual(call[0][0], sort_key)
 
     def test_render_function_start_stop(self):
         '''Start/stop a single host.'''
