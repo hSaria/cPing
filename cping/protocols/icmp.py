@@ -111,7 +111,7 @@ class Ping(cping.protocols.Ping):
             result['hidden'] = False
 
             # Block until signaled to continue
-            host.wait(latency)
+            host.wait(result['latency'])
 
         Ping.host_map.pop(session.identifier)
 
