@@ -129,7 +129,7 @@ class Session:
         '''
         # ICMP type field differs between ICMPv4 and ICMPv6
         self.packet_type = 8 if family == 4 else 128
-        self.sequence = random.randrange(1, 2**16)
+        self.sequence = -1
 
         # Ensure the session identifier is unique between hosts
         while True:
