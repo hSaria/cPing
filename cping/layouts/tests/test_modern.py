@@ -231,6 +231,24 @@ class TestLayout(unittest.TestCase):
             for call, selection in zip(mock.call_args_list, [0, 1, 1, 0, 0]):
                 self.assertEqual(call[0][2], selection)
 
+    def test_render_function_show_address(self):
+        '''Show the address of hosts only if they aren't already an address.'''
+        layout = cping.layouts.modern.Layout(cping.protocols.Ping())
+        layout.add_host('localhost').addrinfo = [0, 0, 0, 0, ['Host1']]
+        layout.add_host('127.0.0.1').addrinfo = [0, 0, 0, 0, ['127.0.0.1']]
+
+        # show_address affects the next iteration, hence the space
+        window = unittest.mock.MagicMock()
+        window.getch = TestLayout.wrap_curses_getch([ord('a'), ord(' ')])
+        function = 'cping.layouts.modern.Layout.render_table'
+
+        with unittest.mock.patch(function) as mock:
+            layout.render(window)
+            table = mock.mock_calls[2][1][1]
+
+            self.assertTrue(table[1]['line'].startswith('localhost Host1  '))
+            self.assertTrue(table[2]['line'].startswith('127.0.0.1  '))
+
     def test_render_function_sort(self):
         '''Ensure accepted sort keys are between 0 and 6.'''
         layout = cping.layouts.modern.Layout(cping.protocols.Ping())

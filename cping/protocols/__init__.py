@@ -309,10 +309,13 @@ class Ping:
             host (cping.protocols.Host): The host to resolve.
         '''
         # Use AI_CANONNAME to force out the default of AI_V4MAPPED | AI_ADDRCONFIG
-        return socket.getaddrinfo(host=host.name,
-                                  port=0,
-                                  family=self.family,
-                                  flags=socket.AI_CANONNAME)[0]
+        addrinfo = socket.getaddrinfo(host=host.name,
+                                      port=0,
+                                      family=self.family,
+                                      flags=socket.AI_CANONNAME)[0]
+        host.addrinfo = addrinfo
+
+        return addrinfo
 
     def ping_loop(self, host):
         '''A blocking call that will begin pinging the host and registering the

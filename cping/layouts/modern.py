@@ -126,10 +126,10 @@ class Layout(cping.layouts.Layout):
         window.timeout(int(self.protocol.interval * 1000))
 
         # State tracking
-        button = selection = sort_key = 0
+        button = selection = show_address = sort_key = 0
 
         while button != ord('q'):
-            table = get_table(self.hosts, sort_key)
+            table = get_table(self.hosts, sort_key, show_address=show_address)
             Layout.render_table(window, table, selection)
 
             # Clear burst mode to avoid sticking while waiting on getch
@@ -142,6 +142,8 @@ class Layout(cping.layouts.Layout):
                 selection = max(selection - 1, 0)
             elif button == curses.KEY_DOWN:
                 selection = min(selection + 1, len(self.hosts))
+            elif button == ord('a'):
+                show_address = not show_address
             elif button == ord('b'):
                 # Burst mode
                 if selection > 0:
@@ -170,13 +172,19 @@ class Layout(cping.layouts.Layout):
             curses.flushinp()
 
 
-def get_host_columns(host):
+def get_host_columns(host, show_address=False):
     '''Returns a list of strings containing host, min, avg, max, stdev, loss.
 
     Args:
         host (cping.protocols.Host): Host from which to get the details.
     '''
     columns = [str(host)]
+
+    if show_address and hasattr(host, 'addrinfo'):
+        address = host.addrinfo[4][0]
+
+        if host.name != address:
+            columns[0] += f' {address}'
 
     for stat in ['min', 'avg', 'max', 'stdev', 'loss']:
         if host.results_summary[stat] is None:
@@ -191,7 +199,7 @@ def get_host_columns(host):
     return columns
 
 
-def get_table(hosts, sort_key=0):
+def get_table(hosts, sort_key=0, show_address=False):
     '''Returns a list of dictionaries, one for each row.
 
     Args:
@@ -210,7 +218,7 @@ def get_table(hosts, sort_key=0):
     for host in sort_hosts(hosts, sort_key):
         row = {
             'host': host,
-            'columns': get_host_columns(host),
+            'columns': get_host_columns(host, show_address=show_address),
             'attrs': curses.A_NORMAL,
         }
 
@@ -264,14 +272,14 @@ def get_table_footer(page_count, page_number, selection):
     if selection == 0:
         footer += '(All): '
 
-    # Host actions
-    footer += '[B]urst mode (hold), '
-    footer += '[S]tart/[S]top | '
-
-    # Layout actions
-    footer += '[▲/▼] Change selection, '
-    footer += '[1-6] Order table, '
-    footer += '[Q]uit'
+    footer += ', '.join([
+        '[B]urst mode (hold)',
+        '[S]tart/[S]top',
+        'Show [a]ddress',
+        '[Q]uit',
+        '[▲/▼] Change selection',
+        '[1-6] Order table',
+    ])
 
     return footer.upper()
 
