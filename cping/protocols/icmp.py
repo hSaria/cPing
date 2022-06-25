@@ -78,8 +78,8 @@ class Ping(cping.protocols.Ping):
                     break
 
     def ping_loop(self, host):
-        host_info = self.resolve(host.address)
-        session = Session(4 if host_info[0] == socket.AF_INET else 6)
+        addrinfo = self.resolve(host)
+        session = Session(4 if addrinfo[0] == socket.AF_INET else 6)
         receive_event = threading.Event()
 
         Ping.host_map[session.identifier] = host, receive_event, self.interval
@@ -95,10 +95,10 @@ class Ping(cping.protocols.Ping):
                                      info=session.sequence)
 
             try:
-                if host_info[0] == socket.AF_INET:
-                    Ping.icmpv4_socket.sendto(request, host_info[4])
+                if addrinfo[0] == socket.AF_INET:
+                    Ping.icmpv4_socket.sendto(request, addrinfo[4])
                 else:
-                    Ping.icmpv6_socket.sendto(request, host_info[4])
+                    Ping.icmpv6_socket.sendto(request, addrinfo[4])
 
                 # Wait until a response is received or the interval expires
                 receive_event.wait(self.interval)

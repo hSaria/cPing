@@ -201,9 +201,9 @@ class TestHost(unittest.TestCase):
         self.assertTrue(host.stop_signal.is_set())
         self.assertFalse(host._test_thread.is_alive())
 
-    def test_invalid_type_address(self):
+    def test_invalid_type_name(self):
         '''Create an instance of Host with an invalid host type.'''
-        with self.assertRaisesRegex(TypeError, 'address must be a string'):
+        with self.assertRaisesRegex(TypeError, 'name must be a string'):
             cping.protocols.Host(1, None)
 
     def test_invalid_type_protocol(self):
@@ -221,13 +221,13 @@ class TestHost(unittest.TestCase):
         with self.assertRaisesRegex(TypeError, 'status must be a string'):
             host.status = 1
 
-    def test_read_only_address(self):
-        '''Host's address attribute is read only.'''
+    def test_read_only_name(self):
+        '''Host's name attribute is read only.'''
         host = cping.protocols.Ping()('localhost')
-        self.assertEqual(host.address, 'localhost')
+        self.assertEqual(host.name, 'localhost')
 
         with self.assertRaisesRegex(AttributeError, 'can.t set attribute'):
-            host.address = 'hi'
+            host.name = 'hi'
 
     def test_read_only_burst_mode(self):
         '''Host's burst_mode attribute is read only.'''
@@ -274,8 +274,9 @@ class TestPing(unittest.TestCase):
 
     def test_resolve(self):
         '''Host resolution.'''
-        host_info = cping.protocols.Ping().resolve('localhost')
-        self.assertIn(host_info[4][0], ('127.0.0.1', '::1'))
+        protocol = cping.protocols.Ping()
+        addrinfo = protocol.resolve(protocol('localhost'))
+        self.assertIn(addrinfo[4][0], ('127.0.0.1', '::1'))
 
     def test_ping_loop(self):
         '''Ensure ping_loop raises NotImplementedError.'''

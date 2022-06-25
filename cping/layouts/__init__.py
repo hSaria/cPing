@@ -37,19 +37,19 @@ class Layout:
         '''The ping protocol.'''
         return self._protocol
 
-    def add_host(self, address):
+    def add_host(self, name):
         '''Adds a host to `self.hosts`. Returns the newly-created host.
 
         Args:
-            address (str): Ping destination.
+            name (str): Ping destination.
 
         Raises:
-            TypeError: If `address` is not a string.
+            TypeError: If `name` is not a string.
         '''
-        if not isinstance(address, str):
-            raise TypeError('address must be a string')
+        if not isinstance(name, str):
+            raise TypeError('name must be a string')
 
-        host = self.protocol(address)
+        host = self.protocol(name)
         self._hosts.append(host)
 
         return host

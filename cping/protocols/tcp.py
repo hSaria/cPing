@@ -43,16 +43,15 @@ class Ping(cping.protocols.Ping):
         self._port = value
 
     def ping_loop(self, host):
-        host_info = self.resolve(host.address)
-        family = host_info[0]
+        addrinfo = self.resolve(host)
 
         while not host.stop_signal.is_set():
-            # Update the port in the host_info in case it was changed
-            location = host_info[4][:1] + (self.port, ) + host_info[4][2:]
+            # Update the port in the addrinfo in case it was changed
+            location = addrinfo[4][:1] + (self.port, ) + addrinfo[4][2:]
             latency = None
             error = False
 
-            with socket.socket(family, socket.SOCK_STREAM) as test_socket:
+            with socket.socket(addrinfo[0], socket.SOCK_STREAM) as test_socket:
                 checkpoint = time.perf_counter()
 
                 try:

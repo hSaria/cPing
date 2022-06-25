@@ -15,11 +15,11 @@ class TestLayout(unittest.TestCase):
         layout = cping.layouts.Layout(cping.protocols.Ping())
         self.assertIn(layout.add_host('localhost'), layout.hosts)
 
-    def test_add_host_invalid_type_address(self):
-        '''Add a host with an invalid address type.'''
+    def test_add_host_invalid_type_name(self):
+        '''Add a host with an invalid name type.'''
         layout = cping.layouts.Layout(cping.protocols.Ping())
 
-        with self.assertRaisesRegex(TypeError, 'address must be a string'):
+        with self.assertRaisesRegex(TypeError, 'name must be a string'):
             layout.add_host(None)
 
     def test_remove_host(self):

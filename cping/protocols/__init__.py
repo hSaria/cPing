@@ -20,19 +20,19 @@ class Host:
     '''A destination of pings of which it stores the results.'''
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, address, protocol):
+    def __init__(self, name, protocol):
         '''Constructor.
 
         Args:
-            address (str): Ping destination.
+            name (str): Ping destination.
             protocol (cping.protocols.Ping): Protocol to use for pinging.
 
         Raises:
-            TypeError: If `address` is not a string. If protocol is not an
+            TypeError: If `name` is not a string. If `protocol` is not an
                 instance of `cping.protocols.Ping`
         '''
-        if not isinstance(address, str):
-            raise TypeError('address must be a string')
+        if not isinstance(name, str):
+            raise TypeError('name must be a string')
 
         if not isinstance(protocol, Ping):
             raise TypeError('protocol must be an instance of '
@@ -40,8 +40,8 @@ class Host:
 
         self.raw_results = collections.deque(maxlen=RESULTS_LENGTH_MINIMUM)
 
-        self._address = address
         self._burst_mode = threading.Event()
+        self._name = name
         self._protocol = protocol
         self._status = None
         self._stop_signal = threading.Event()
@@ -56,17 +56,17 @@ class Host:
         self._cached_results_summary = lru_cache()(self._get_results_summary)
 
     def __str__(self):
-        return self._address
-
-    @property
-    def address(self):
-        '''Ping destination.'''
-        return self._address
+        return self._name
 
     @property
     def burst_mode(self):
         '''An instance of `threading.Event` to use burst mode when set.'''
         return self._burst_mode
+
+    @property
+    def name(self):
+        '''Ping destination.'''
+        return self._name
 
     @property
     def protocol(self):
@@ -268,13 +268,13 @@ class Ping:
         self.interval = interval
         self.family = family
 
-    def __call__(self, address):
-        '''Returns `cping.protocols.Host(address, self)`.
+    def __call__(self, name):
+        '''Returns `cping.protocols.Host(name, self)`.
 
         Args:
-            address (str): Ping destination.
+            name (str): Ping destination.
         '''
-        return Host(address, self)
+        return Host(name, self)
 
     @property
     def family(self):
@@ -302,14 +302,14 @@ class Ping:
 
         self._interval = value
 
-    def resolve(self, address):
+    def resolve(self, host):
         '''Returns the tuple of the first item from `socket.getaddrinfo`.
 
         Args:
-            address (str): The host to resolve.
+            host (cping.protocols.Host): The host to resolve.
         '''
         # Use AI_CANONNAME to force out the default of AI_V4MAPPED | AI_ADDRCONFIG
-        return socket.getaddrinfo(host=address,
+        return socket.getaddrinfo(host=host.name,
                                   port=0,
                                   family=self.family,
                                   flags=socket.AI_CANONNAME)[0]
