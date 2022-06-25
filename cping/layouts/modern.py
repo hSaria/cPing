@@ -77,7 +77,7 @@ class Layout(cping.layouts.Layout):
         page_count = math.ceil(len(table) / (lines - 1))
         page_number = (selection // (lines - 1)) + 1
 
-        footer = get_table_footer(page_count, page_number, selection)
+        footer = get_table_footer(page_count, page_number)
         footer = footer.ljust(columns)
 
         try:
@@ -260,17 +260,14 @@ def get_table(hosts, sort_key=0, show_address=False):
     return table
 
 
-def get_table_footer(page_count, page_number, selection):
+def get_table_footer(page_count, page_number):
     '''Returns a footer (string) for a table.
 
     Args:
         page_count (int): The total number of pages.
         page_number (int): Currently selected page.
     '''
-    footer = f' Page {page_number}/{page_count} | '
-
-    if selection == 0:
-        footer += '(All): '
+    footer = f' Page {page_number}/{page_count} | ' if page_count > 1 else ''
 
     footer += ', '.join([
         '[B]urst mode (hold)',

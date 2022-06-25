@@ -109,7 +109,7 @@ class TestLayout(unittest.TestCase):
         self.assertTrue(window.mock_calls[1][1][2].startswith(' HOST'))
         self.assertTrue(window.mock_calls[2][1][2].startswith('host1'))
         self.assertTrue(window.mock_calls[3][1][2].startswith('host2'))
-        self.assertTrue(window.mock_calls[4][1][2].startswith(' PAGE'))
+        self.assertTrue(window.mock_calls[4][1][2].startswith('['))
 
         # The header is selected
         header_attributes = window.mock_calls[1][1][4]
