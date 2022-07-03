@@ -63,9 +63,10 @@ class Ping(cping.protocols.Ping):
             latency = time.perf_counter() - timestamp
             host, event, interval = Ping.host_map[identifier]
 
-            # Search through all of the results, including the hidden ones.
-            for result in host.raw_results:
-                if result['info'] == sequence:
+            # Search through all of the results, including the hidden ones
+            # Reversed to ensure duplicate sequences are access in LIFO order
+            for result in reversed(host.raw_results):
+                if result['info'] == (identifier, sequence):
                     result['latency'] = latency
 
                     # Reply arrived on time; inform the host's ping loop to continue
@@ -89,7 +90,9 @@ class Ping(cping.protocols.Ping):
             request, sequence = session.create_icmp_echo()
 
             # Initially hidden to avoid showing a downed result
-            result = host.add_result(-1, hidden=True, info=sequence)
+            result = host.add_result(-1,
+                                     hidden=True,
+                                     info=(session.identifier, sequence))
 
             try:
                 if addrinfo[0] == socket.AF_INET:
