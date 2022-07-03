@@ -56,14 +56,14 @@ class TestPing(unittest.TestCase):
     def test_malformed_packet(self):
         '''A packet that cannot be unpacked shouldn't crash the receiver thread.'''
         session = cping.protocols.icmp.Session(6)
-        request = session.create_icmp_echo()
+        request, _ = session.create_icmp_echo()
         protocol = cping.protocols.icmp.Ping()
         protocol.icmpv6_socket.sendto(request[:8], ('::1', 0))
 
     def test_unknown_host(self):
         '''A packet with an unknown identifier should be ignored.'''
         session = cping.protocols.icmp.Session(6)
-        request = session.create_icmp_echo()
+        request, _ = session.create_icmp_echo()
         protocol = cping.protocols.icmp.Ping()
         protocol.icmpv6_socket.sendto(request, ('::1', 0))
 

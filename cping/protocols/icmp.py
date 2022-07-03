@@ -86,13 +86,10 @@ class Ping(cping.protocols.Ping):
 
         while not host.stop_signal.is_set():
             receive_event.clear()
-            latency = -1
-            request = session.create_icmp_echo()
+            request, sequence = session.create_icmp_echo()
 
             # Initially hidden to avoid showing a downed result
-            result = host.add_result(latency,
-                                     hidden=True,
-                                     info=session.sequence)
+            result = host.add_result(-1, hidden=True, info=sequence)
 
             try:
                 if addrinfo[0] == socket.AF_INET:
@@ -170,4 +167,4 @@ class Session:
         # Checksum is calculated with the checksum in the header set to 0
         request = request[:2] + Session.get_checksum(request) + request[4:]
 
-        return request
+        return request, self.sequence
