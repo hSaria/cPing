@@ -18,7 +18,7 @@ def create_shared_event(*events):
 
     # Set shared_event if any of the events are set; cleared otherwise.
     def update():
-        if any((event.is_set() for event in events)):
+        if any(event.is_set() for event in events):
             shared_event.set()
         else:
             shared_event.clear()

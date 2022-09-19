@@ -158,7 +158,7 @@ class Layout(cping.layouts.Layout):
                         table[selection]['host'].stop(block=True)
                     else:
                         table[selection]['host'].start()
-                elif any((host.is_running() for host in self.hosts)):
+                elif any(host.is_running() for host in self.hosts):
                     for host in self.hosts:
                         host.stop(block=True)
                 else:
