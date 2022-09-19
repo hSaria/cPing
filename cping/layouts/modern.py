@@ -119,7 +119,7 @@ class Layout(cping.layouts.Layout):
     def render(self, window):
         '''Start rendering the layout. Blocking function meant to be called with
         `curses.wrapper(self.render)`.'''
-        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-branches,not-an-iterable  # linter bug
         Layout.initialize_colors()
 
         # Set the timeout (ms) for `windows.getch`

@@ -15,7 +15,8 @@ class Layout(cping.layouts.Layout):
             # Enable alternate screen buffer
             print('\x1b[?1049h', end='')
 
-            while any((host.is_running() for host in self.hosts)):
+            # pylint: disable=not-an-iterable  # linter bug
+            while any(host.is_running() for host in self.hosts):
                 # Move to top left, then print table
                 print(f'\x1b[H{get_table(self.hosts)}', end='', flush=True)
                 time.sleep(self.protocol.interval)
